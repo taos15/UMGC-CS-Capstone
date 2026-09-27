@@ -1,0 +1,16 @@
+[
+  {
+    "id": "emp-alex",
+    "name": "Alex Morgan",
+    "skills": ["electrical wiring", "blueprint reading", "troubleshooting", "project coordination"],
+    "certifications": ["licensed electrician", "osha 10"],
+    "years_experience": 8
+  },
+  {
+    "id": "emp-jordan",
+    "name": "Jordan Lee",
+    "skills": ["electrical wiring", "troubleshooting", "project coordination"],
+    "certifications": ["osha 10"],
+    "years_experience": 4
+  }
+]
