@@ -15,6 +15,7 @@ SkillMatch AI is an alpha workforce-matching prototype that recommends employees
 
 ```text
 app/             FastAPI application, service modules, and matching engine
+backend/         Backend entrypoint and scaffold (api, domain, repositories, matching, tests)
 tests/           Matching-engine and API tests
 sample_data/     JSON representations of the alpha seed data
 docs/            Team workflow and peer-review guidance
@@ -26,10 +27,14 @@ docs/            Team workflow and peer-review guidance
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn backend.main:app --reload
 ```
 
 Open `http://127.0.0.1:8000/docs` for the API documentation.
+
+`backend.main` reuses the existing application in `app.main`. The modules in
+`backend/api` are empty placeholders for Employee, Job, Matching, Feedback/Audit,
+and Auth; the remaining backend packages reserve space for future implementation.
 
 ## Example
 
