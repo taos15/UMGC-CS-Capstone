@@ -13,6 +13,13 @@ def test_health_check() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_health_check_v1_reports_database_status() -> None:
+    response = client.get("/api/v1/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "database": "ok"}
+
+
 def test_recommendations_are_ranked_and_support_request_options() -> None:
     response = client.post(
         "/api/v1/jobs/job-electrician/recommendations",
