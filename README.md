@@ -23,11 +23,13 @@ docs/            Team workflow and peer-review guidance
 
 ## Run Locally
 
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/). Python itself doesn't
+need to be installed separately - `uv sync` downloads the version pinned in `.python-version`
+(3.12) and creates `.venv` automatically.
+
 ```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn backend.main:app --reload
+uv sync
+uv run uvicorn backend.main:app --reload
 ```
 
 Open `http://127.0.0.1:8000/docs` for the API documentation.
@@ -52,5 +54,5 @@ Send a `POST` request to `/api/v1/jobs/job-electrician/recommendations`:
 Run the tests with:
 
 ```powershell
-pytest -q
+uv run pytest -q
 ```
