@@ -1,9 +1,11 @@
 from fastapi import FastAPI, HTTPException
+from sqlalchemy import text
 
 from app.employee_service import get_employee, get_employees
 from app.job_service import get_job
 from app.recommendation_service import recommend_employees
 from app.schemas import Employee, Job, RecommendationRequest, RecommendationResponse
+from backend.database import engine
 
 
 app = FastAPI(
@@ -16,6 +18,21 @@ app = FastAPI(
 @app.get("/health")
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/v1/health")
+def health_check_v1() -> dict[str, str]:
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        database_status = "ok"
+    except Exception:
+        database_status = "unavailable"
+
+    return {
+        "status": "ok" if database_status == "ok" else "degraded",
+        "database": database_status,
+    }
 
 
 @app.get("/api/v1/employees", response_model=list[Employee])
