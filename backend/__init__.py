@@ -1,1 +1,0 @@
-"""SkillMatch AI backend package."""
