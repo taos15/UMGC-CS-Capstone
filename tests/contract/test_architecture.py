@@ -13,7 +13,7 @@ def test_canonical_app_preserves_openapi_contract() -> None:
     digest = hashlib.sha256(
         json.dumps(app.openapi(), sort_keys=True).encode()
     ).hexdigest()
-    assert digest == "b1ea72e0529e2cc16b889eaeb4b296709eeeedcb05f334a929ab92d13ec573ab"
+    assert digest == "b1a7a06babfbd06715844d2f3e5f8527ab2d6869c29783575a420277e76ced92"
 
 
 def test_matching_has_no_http_database_or_orchestration_imports() -> None:
@@ -58,3 +58,23 @@ def test_canonical_sources_have_one_app_and_no_legacy_imports() -> None:
             assert all(module.split(".")[0] not in {
                        "app", "backend"} for module in modules), path
     assert app_locations == ["backend/src/skillmatch/main.py"]
+
+
+def test_entrypoint_and_error_module_have_no_duplicate_definitions() -> None:
+    for relative_path in ('main.py', 'core/errors.py'):
+        path = ROOT / 'backend/src/skillmatch' / relative_path
+        names = [node.name for node in ast.parse(path.read_text()).body
+                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
+        assert len(names) == len(set(names)), (path, names)
+
+
+def test_canonical_app_registers_both_auth_and_http_problem_handlers() -> None:
+    from fastapi.exceptions import RequestValidationError
+    from starlette.exceptions import HTTPException
+    from skillmatch.core.errors import (
+        ProblemError, http_error_handler, problem_handler, validation_handler,
+    )
+    app = importlib.import_module('skillmatch.main').app
+    assert app.exception_handlers[ProblemError] is problem_handler
+    assert app.exception_handlers[HTTPException] is http_error_handler
+    assert app.exception_handlers[RequestValidationError] is validation_handler

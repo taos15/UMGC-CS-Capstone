@@ -26,7 +26,7 @@ SSO, MFA, password reset, or production enterprise IAM.
 
 ## Dependencies / preconditions
 
-The Project Design Specification does not define exact credential field names/token response shape; preserve tested current behavior or approve an amendment first.
+The local-login schema is finalized by the user-approved amendment in `resources/spec_bundle/api/api_contract.md`.
 
 ## Acceptance criteria
 
