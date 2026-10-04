@@ -43,4 +43,30 @@ Canonical base path: `/api/v1`.
 
 ## Underspecified details
 
-The Project Design Specification does not fully define login credential field names/token response schema, the full Skill object schema, search/filter query parameters, or the exact health response shape. Preserve tested current behavior if it exists; otherwise record an approved contract amendment instead of silently inventing a public schema.
+The Project Design Specification does not fully define the full Skill object schema, search/filter query parameters, or the exact health response shape. Preserve tested current behavior if it exists; otherwise record an approved contract amendment instead of silently inventing a public schema.
+
+## Approved local-login amendment
+
+Approved by the user in this implementation session:
+
+- `POST /auth/login` accepts JSON `username` and `password` strings.
+- Success is HTTP 200 with `access_token`, `token_type: "bearer"`, and
+  `expires_in: 900` (seconds). The response is not cacheable.
+- JWTs use HS256 and contain `sub` (user UUID), `role` (ADMIN/SUPERVISOR/VIEWER),
+  `iat` and `exp` (Unix seconds), with a 15-minute lifetime.
+- Local accounts are configured as password hashes, with no built-in accounts.
+  `SKILLMATCH_LOCAL_USERS` is a JSON object keyed by exact username, with
+  `user_id`, `role`, and `password_hash` per entry. `SKILLMATCH_JWT_SECRET` is
+  an externally supplied signing secret of at least 32 UTF-8 bytes.
+- Hash format is `scrypt$<base64 salt>$<base64 digest>` with a random 16-byte
+  salt, N=16384, r=8, p=1, and a 64-byte digest.
+- Username length is 1–128; password length is 1–1024. Password values are
+  excluded from validation errors and logging.
+- Unknown usernames and wrong passwords return the same 401 problem:
+  `AUTH_INVALID_CREDENTIALS`, detail `Invalid username or password.`, and
+  `WWW-Authenticate: Bearer`. Missing/malformed/expired bearer credentials
+  on workforce routes return generic 401 `AUTH_REQUIRED`.
+- Configuration failures return generic 503 `AUTH_UNAVAILABLE`; no fallback
+  signing secret or default account is used.
+- Login and health remain public. Workforce routes validate bearer tokens;
+  role authorization remains the separate AUTH-002 implementation.

@@ -1,28 +1,22 @@
-from fastapi.testclient import TestClient
-
 import pytest
 
-from skillmatch.main import app
 
 
-client = TestClient(app)
-
-
-def test_health_check() -> None:
+def test_health_check(client) -> None:
     response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-def test_health_check_v1_reports_database_status() -> None:
+def test_health_check_v1_reports_database_status(client) -> None:
     response = client.get("/api/v1/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "database": "ok"}
 
 
-def test_recommendations_are_ranked_and_support_request_options() -> None:
+def test_recommendations_are_ranked_and_support_request_options(client) -> None:
     response = client.post(
         "/api/v1/jobs/job-electrician/recommendations",
         json={
@@ -50,7 +44,7 @@ def test_recommendations_are_ranked_and_support_request_options() -> None:
     ][0]["score"]
 
 
-def test_missing_job_returns_not_found() -> None:
+def test_missing_job_returns_not_found(client) -> None:
     response = client.post(
         "/api/v1/jobs/missing/recommendations",
         json={},
@@ -59,7 +53,7 @@ def test_missing_job_returns_not_found() -> None:
     assert response.status_code == 404
 
 
-def test_employee_and_job_reads_preserve_seed_data() -> None:
+def test_employee_and_job_reads_preserve_seed_data(client) -> None:
     employees = client.get("/api/v1/employees").json()
     assert [employee["id"] for employee in employees] == ["emp-alex", "emp-jordan", "emp-sam"]
     assert client.get("/api/v1/employees/emp-alex").json() == employees[0]
@@ -77,7 +71,7 @@ def test_employee_and_job_reads_preserve_seed_data() -> None:
     ("/api/v1/employees/missing", "Employee not found"),
     ("/api/v1/jobs/missing", "Job not found"),
 ])
-def test_missing_resources(path: str, detail: str) -> None:
+def test_missing_resources(path: str, detail: str, client) -> None:
     response = client.get(path)
     assert response.status_code == 404
     assert response.json() == {
@@ -87,7 +81,7 @@ def test_missing_resources(path: str, detail: str) -> None:
     }
 
 
-def test_recommendation_defaults_scores_and_explanation() -> None:
+def test_recommendation_defaults_scores_and_explanation(client) -> None:
     response = client.post("/api/v1/jobs/job-electrician/recommendations", json={})
     assert response.status_code == 200
     recommendations = response.json()["recommendations"]
@@ -109,7 +103,7 @@ def test_recommendation_defaults_scores_and_explanation() -> None:
     ({"minimumScore": 55.33}, ["emp-alex", "emp-jordan"]),
     ({"minimumScore": 55.34}, ["emp-alex"]),
 ])
-def test_recommendation_candidate_and_threshold_options(options: dict, expected: list[str]) -> None:
+def test_recommendation_candidate_and_threshold_options(options: dict, expected: list[str], client) -> None:
     response = client.post("/api/v1/jobs/job-electrician/recommendations", json=options)
     assert response.status_code == 200
     assert [item["employeeId"] for item in response.json()["recommendations"]] == expected
@@ -118,11 +112,11 @@ def test_recommendation_candidate_and_threshold_options(options: dict, expected:
 @pytest.mark.parametrize("options", [
     {"topK": 0}, {"topK": 101}, {"minimumScore": -1}, {"minimumScore": 101}
 ])
-def test_recommendation_validation(options: dict) -> None:
+def test_recommendation_validation(options: dict, client) -> None:
     assert client.post("/api/v1/jobs/job-electrician/recommendations", json=options).status_code == 422
 
 
-def test_database_unavailable_health(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_database_unavailable_health(monkeypatch: pytest.MonkeyPatch, client) -> None:
     def unavailable():
         raise RuntimeError("database unavailable")
 

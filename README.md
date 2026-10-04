@@ -112,8 +112,49 @@ allow ADMIN; recommendations and feedback allow ADMIN and SUPERVISOR.
 Match-run retrieval additionally requires authorized run scope. Login is public.
 The health role policy is unspecified (`x-role-policy: unspecified`).
 
-Role annotations are documentation only; authentication and role enforcement
-are not implemented by this stub task. Existing employee retrieval, job
-retrieval, recommendations, and health behavior remain functional. All other
-routes return HTTP 501 with `{"detail": "Not implemented"}`. Request/response
+Workforce routes require a valid bearer token. Role annotations remain
+documentation only; role enforcement is the separate AUTH-002 task. Existing employee retrieval, job
+retrieval, recommendations, and health behavior remain functional. The remaining feature stubs
+return HTTP 501 after authentication with `{"detail": "Not implemented"}`. Request/response
 contracts for these placeholders will be connected during feature implementation.
+
+## Local login
+
+Configure `SKILLMATCH_JWT_SECRET` with a random secret of at least 32 bytes and
+`SKILLMATCH_LOCAL_USERS` with a JSON object containing your local accounts:
+
+```json
+{
+  "your-username": {
+    "user_id": "<user UUID>",
+    "role": "SUPERVISOR",
+    "password_hash": "<salted scrypt hash>"
+  }
+}
+```
+
+Roles are ADMIN, SUPERVISOR, or VIEWER. There are no built-in accounts or
+fallback signing keys. Supply these values through your local environment;
+keep secrets and account configuration out of source control. Generate a
+password hash interactively without placing the password in command history:
+
+```sh
+uv run python -c 'from getpass import getpass; from skillmatch.core.security import hash_password; print(hash_password(getpass("Password: ")))'
+```
+
+Login with JSON `{"username": "your-username", "password": "your-password"}` at
+`POST /api/v1/auth/login`. Success returns `access_token`, `token_type: "bearer"`,
+and `expires_in: 900`. Subsequent workforce requests use
+`Authorization: Bearer <access_token>`. Tokens expire after 15 minutes; login
+again to obtain a new token. Login responses use `Cache-Control: no-store`.
+JWT signatures and expiry are handled by [PyJWT](https://pyjwt.readthedocs.io/en/v2.14.0/usage.html)
+with a fixed HS256 algorithm.
+
+Wrong passwords and unknown usernames return identical HTTP 401
+`application/problem+json` responses with `AUTH_INVALID_CREDENTIALS` and the
+generic detail `Invalid username or password.` Missing, invalid, or expired
+bearer tokens return `AUTH_REQUIRED`. Both use `WWW-Authenticate: Bearer`.
+Error bodies and every response carry matching request IDs. Invalid auth
+configuration fails with generic HTTP 503 `AUTH_UNAVAILABLE`.
+Health endpoints remain public. Role authorization and run-scope checks
+remain AUTH-002 work; authentication alone does not enforce the role annotations.

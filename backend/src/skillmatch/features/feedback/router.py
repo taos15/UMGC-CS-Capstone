@@ -5,7 +5,8 @@ from fastapi import APIRouter, HTTPException
 router = APIRouter()
 
 SUPERVISE = {'x-allowed-roles': ['ADMIN', 'SUPERVISOR']}
-UNIMPLEMENTED = {501: {'description': 'Endpoint is not implemented yet.'}}
+UNIMPLEMENTED = {501: {'description': 'Endpoint is not implemented yet.',
+    'content': {'application/problem+json': {'schema': {'$ref': '#/components/schemas/ProblemDetails'}}}}}
 
 
 @router.post('/api/v1/match-runs/{match_run_id}/feedback', tags=['feedback'], responses=UNIMPLEMENTED, status_code=501,
