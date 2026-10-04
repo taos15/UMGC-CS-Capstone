@@ -19,7 +19,7 @@ def test_canonical_app_preserves_openapi_contract() -> None:
 def test_matching_has_no_http_database_or_orchestration_imports() -> None:
     package = ROOT / "backend/src/skillmatch/features/matching"
     assert package.is_dir()
-    allowed = {"typing", "pydantic", "skillmatch.features.matching"}
+    allowed = {"datetime", "typing", "pydantic", "skillmatch.features.matching"}
     for path in package.glob("*.py"):
         for node in ast.walk(ast.parse(path.read_text())):
             modules = []
