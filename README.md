@@ -63,3 +63,21 @@ Run the tests with:
 ```powershell
 uv run pytest -q
 ```
+
+## REST endpoint stubs and role annotations
+
+All section 5 routes are registered under `/api/v1`, including
+`GET /api/v1/health`. The original `/health` remains available for compatibility.
+The listed routes represent 15 method/path operations.
+
+OpenAPI descriptions and `x-allowed-roles` record the intended role policy:
+read operations allow ADMIN, SUPERVISOR, and VIEWER; profile and skill writes
+allow ADMIN; recommendations and feedback allow ADMIN and SUPERVISOR.
+Match-run retrieval additionally requires authorized run scope. Login is public.
+The health role policy is unspecified (`x-role-policy: unspecified`).
+
+Role annotations are documentation only; authentication and role enforcement
+are not implemented by this stub task. Existing employee retrieval, job
+retrieval, recommendations, and health behavior remain functional. All other
+routes return HTTP 501 with `{"detail": "Not implemented"}`. Request/response
+contracts for these placeholders will be connected during feature implementation.
