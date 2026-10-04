@@ -13,7 +13,7 @@ def test_canonical_app_preserves_openapi_contract() -> None:
     digest = hashlib.sha256(
         json.dumps(app.openapi(), sort_keys=True).encode()
     ).hexdigest()
-    assert digest == "3a947396a8954a697bf1ec61a19587d4d5ae9dd1bd2cfea3284cbb47c0aaecb4"
+    assert digest == "e462a6380b2b9e9f24500e4a52dac56515ef1107a05edc298d65525d8d1dc99c"
 
 
 def test_matching_has_no_http_database_or_orchestration_imports() -> None:
@@ -36,7 +36,7 @@ def test_matching_has_no_http_database_or_orchestration_imports() -> None:
 
 
 def test_legacy_source_and_scaffold_are_removed() -> None:
-    assert not list((ROOT / "app").glob("*.py"))
+    assert not (ROOT / "app").exists()
     assert not list((ROOT / "backend").glob("*.py"))
     for name in ("api", "domain", "repositories", "matching", "tests"):
         assert not list((ROOT / "backend" / name).rglob("*.py"))

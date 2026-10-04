@@ -16,7 +16,7 @@ SkillMatch AI is an alpha workforce-matching prototype that recommends employees
 ```text
 backend/src/skillmatch/
   main.py        Canonical FastAPI application and health endpoints
-  core/          Cross-cutting configuration
+  core/          Cross-cutting configuration, problem responses, and request-ID middleware
   db/            Shared SQLModel base, engine, and sessions
   features/      Employees, jobs, recommendations, and pure matching
 tests/           Unit, API/database integration, and architecture contract tests

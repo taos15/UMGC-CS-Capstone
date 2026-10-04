@@ -4,7 +4,7 @@ from uuid import UUID
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from skillmatch.main import app
 
 client = TestClient(app)
 
@@ -50,7 +50,7 @@ def test_invalid_request_id_is_replaced():
 def test_unexpected_error_is_generic_and_correlated(monkeypatch):
     def fail():
         raise RuntimeError('private database password')
-    monkeypatch.setattr('app.main.get_employees', fail)
+    monkeypatch.setattr('skillmatch.features.employees.router.get_employees', fail)
     response = TestClient(app, raise_server_exceptions=False).get('/api/v1/employees', headers={'X-Request-ID': 'failure-123'})
     assert response.status_code == 500
     assert response.headers['content-type'] == 'application/problem+json'
