@@ -14,22 +14,36 @@ SkillMatch AI is an alpha workforce-matching prototype that recommends employees
 ## Project Structure
 
 ```text
-app/             FastAPI application, service modules, and matching engine
-tests/           Matching-engine and API tests
-sample_data/     JSON representations of the alpha seed data
-docs/            Team workflow and peer-review guidance
+backend/src/skillmatch/
+  main.py        Canonical FastAPI application and health endpoints
+  core/          Cross-cutting configuration
+  db/            Shared SQLModel base, engine, and sessions
+  features/      Employees, jobs, recommendations, and pure matching
+tests/           Unit, API/database integration, and architecture contract tests
+data/sample/     JSON examples of alpha seed data
+docs/            Architecture, technical debt, workflow, and review guidance
 ```
 
 ## Run Locally
 
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/). Python itself doesn't
+need to be installed separately - `uv sync` downloads the version pinned in `.python-version`
+(3.12) and creates `.venv` automatically.
+
 ```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+uv sync
+uv run uvicorn skillmatch.main:app --reload
 ```
 
 Open `http://127.0.0.1:8000/docs` for the API documentation.
+
+Root `pyproject.toml` installs `skillmatch` from `backend/src/` during `uv sync`.
+Each implemented feature owns its HTTP/schema/data-access responsibilities.
+Recommendation orchestration retrieves candidates and passes immutable DTOs to
+matching, which has no HTTP or database dependencies.
+
+See [architecture](docs/architecture/ARCH-001.md) and
+[remaining technical debt](docs/technical_debt/architecture-migration.md).
 
 ## Example
 
@@ -47,7 +61,7 @@ Send a `POST` request to `/api/v1/jobs/job-electrician/recommendations`:
 Run the tests with:
 
 ```powershell
-pytest -q
+uv run pytest -q
 ```
 
 ## REST endpoint stubs and role annotations

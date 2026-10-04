@@ -9,3 +9,7 @@ htmlcov/
 .idea/
 .vscode/
 .DS_Store
+*.db
+*.egg-info/
+build/
+dist/
