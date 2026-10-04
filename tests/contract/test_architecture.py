@@ -13,7 +13,7 @@ def test_canonical_app_preserves_openapi_contract() -> None:
     digest = hashlib.sha256(
         json.dumps(app.openapi(), sort_keys=True).encode()
     ).hexdigest()
-    assert digest == "e462a6380b2b9e9f24500e4a52dac56515ef1107a05edc298d65525d8d1dc99c"
+    assert digest == "b1ea72e0529e2cc16b889eaeb4b296709eeeedcb05f334a929ab92d13ec573ab"
 
 
 def test_matching_has_no_http_database_or_orchestration_imports() -> None:
@@ -55,5 +55,6 @@ def test_canonical_sources_have_one_app_and_no_legacy_imports() -> None:
                 modules = [node.module or ""]
             else:
                 continue
-            assert all(module.split(".")[0] not in {"app", "backend"} for module in modules), path
+            assert all(module.split(".")[0] not in {
+                       "app", "backend"} for module in modules), path
     assert app_locations == ["backend/src/skillmatch/main.py"]

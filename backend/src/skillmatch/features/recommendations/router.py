@@ -18,6 +18,8 @@ router = APIRouter()
 @router.post(
     "/api/v1/jobs/{job_id}/recommendations",
     response_model=RecommendationResponse,
+    openapi_extra={"x-allowed-roles": ["ADMIN", "SUPERVISOR"]},
+    description="Allowed roles: ADMIN, SUPERVISOR. Supervisor retains final staffing authority.",
 )
 def create_recommendations(
     job_id: str, request: RecommendationRequest
@@ -37,3 +39,13 @@ def create_recommendations(
             request.include_missing_skills,
         ),
     )
+
+READ = {'x-allowed-roles': ['ADMIN', 'SUPERVISOR', 'VIEWER']}
+UNIMPLEMENTED = {501: {'description': 'Endpoint is not implemented yet.'}}
+
+
+@router.get('/api/v1/match-runs/{match_run_id}', tags=['match-runs'], responses=UNIMPLEMENTED, status_code=501,
+            openapi_extra=READ,
+            description='Allowed roles: ADMIN, SUPERVISOR, VIEWER, within authorized run scope.')
+def retrieve_match_run(match_run_id: str):
+    raise HTTPException(status_code=501, detail='Not implemented')
