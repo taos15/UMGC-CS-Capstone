@@ -58,3 +58,12 @@ class CandidateResult(BaseModel):
     missing_certifications: list[str]
     ineligible_reasons: list[str]
     explanation: str
+
+
+class RecommendationResponse(BaseModel):
+    match_run_id: str
+    model_version: str
+    job_id: str = Field(alias="jobId")
+    recommendations: list[Recommendation]
+
+    model_config = {"populate_by_name": True}

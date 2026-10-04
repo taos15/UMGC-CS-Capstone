@@ -7,6 +7,8 @@ from skillmatch.features.matching.schemas import (
 )
 
 
+MODEL_VERSION = "rules-v1"
+
 REQUIRED_SKILL_WEIGHT = 50
 PREFERRED_SKILL_WEIGHT = 10
 CERTIFICATION_WEIGHT = 25

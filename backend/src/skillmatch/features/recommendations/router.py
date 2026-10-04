@@ -1,3 +1,7 @@
+from uuid import uuid4
+
+from skillmatch.features.matching.scoring import MODEL_VERSION
+
 from fastapi import APIRouter, HTTPException
 
 from skillmatch.features.jobs.repository import get_job
@@ -25,6 +29,8 @@ def create_recommendations(
         raise HTTPException(status_code=404, detail="Job not found")
     return RecommendationResponse(
         jobId=job.id,
+        match_run_id=str(uuid4()),
+        model_version=MODEL_VERSION,
         recommendations=recommend_employees(
             job,
             request.candidate_employee_ids,

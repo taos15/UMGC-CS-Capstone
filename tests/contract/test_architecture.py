@@ -13,7 +13,7 @@ def test_canonical_app_preserves_openapi_contract() -> None:
     digest = hashlib.sha256(
         json.dumps(app.openapi(), sort_keys=True).encode()
     ).hexdigest()
-    assert digest == "816a52602130f38b2419db05c2a534f831ab68888e2e83e78d57462e8d08fd40"
+    assert digest == "b1ea72e0529e2cc16b889eaeb4b296709eeeedcb05f334a929ab92d13ec573ab"
 
 
 def test_matching_has_no_http_database_or_orchestration_imports() -> None:
@@ -36,7 +36,7 @@ def test_matching_has_no_http_database_or_orchestration_imports() -> None:
 
 
 def test_legacy_source_and_scaffold_are_removed() -> None:
-    assert not list((ROOT / "app").glob("*.py"))
+    assert not (ROOT / "app").exists()
     assert not list((ROOT / "backend").glob("*.py"))
     for name in ("api", "domain", "repositories", "matching", "tests"):
         assert not list((ROOT / "backend" / name).rglob("*.py"))
@@ -55,5 +55,6 @@ def test_canonical_sources_have_one_app_and_no_legacy_imports() -> None:
                 modules = [node.module or ""]
             else:
                 continue
-            assert all(module.split(".")[0] not in {"app", "backend"} for module in modules), path
+            assert all(module.split(".")[0] not in {
+                       "app", "backend"} for module in modules), path
     assert app_locations == ["backend/src/skillmatch/main.py"]

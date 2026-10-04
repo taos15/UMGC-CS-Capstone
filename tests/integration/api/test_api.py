@@ -80,7 +80,11 @@ def test_employee_and_job_reads_preserve_seed_data() -> None:
 def test_missing_resources(path: str, detail: str) -> None:
     response = client.get(path)
     assert response.status_code == 404
-    assert response.json() == {"detail": detail}
+    assert response.json() == {
+        "type": "about:blank", "title": "Not Found", "status": 404,
+        "code": "NOT_FOUND", "request_id": response.headers["X-Request-ID"],
+        "detail": detail, "field_errors": [],
+    }
 
 
 def test_recommendation_defaults_scores_and_explanation() -> None:
