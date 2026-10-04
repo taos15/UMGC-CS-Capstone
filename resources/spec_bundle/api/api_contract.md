@@ -68,5 +68,5 @@ Approved by the user in this implementation session:
   on workforce routes return generic 401 `AUTH_REQUIRED`.
 - Configuration failures return generic 503 `AUTH_UNAVAILABLE`; no fallback
   signing secret or default account is used.
-- Login and health remain public. Workforce routes validate bearer tokens;
-  role authorization remains the separate AUTH-002 implementation.
+- Login and health remain public. Workforce routes validate bearer tokens and
+  enforce the section 5 role matrix through centralized route dependencies.

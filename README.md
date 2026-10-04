@@ -112,8 +112,8 @@ allow ADMIN; recommendations and feedback allow ADMIN and SUPERVISOR.
 Match-run retrieval additionally requires authorized run scope. Login is public.
 The health role policy is unspecified (`x-role-policy: unspecified`).
 
-Workforce routes require a valid bearer token. Role annotations remain
-documentation only; role enforcement is the separate AUTH-002 task. Existing employee retrieval, job
+Workforce routes require a valid bearer token and enforce the documented
+ADMIN/SUPERVISOR/VIEWER permissions in the backend. Existing employee retrieval, job
 retrieval, recommendations, and health behavior remain functional. The remaining feature stubs
 return HTTP 501 after authentication with `{"detail": "Not implemented"}`. Request/response
 contracts for these placeholders will be connected during feature implementation.
@@ -156,5 +156,6 @@ generic detail `Invalid username or password.` Missing, invalid, or expired
 bearer tokens return `AUTH_REQUIRED`. Both use `WWW-Authenticate: Bearer`.
 Error bodies and every response carry matching request IDs. Invalid auth
 configuration fails with generic HTTP 503 `AUTH_UNAVAILABLE`.
-Health endpoints remain public. Role authorization and run-scope checks
-remain AUTH-002 work; authentication alone does not enforce the role annotations.
+Health endpoints remain public. Role authorization is enforced on every
+workforce route. Match-run retrieval is still a stub; run-scope checks must be
+connected when stored-run retrieval is implemented.
