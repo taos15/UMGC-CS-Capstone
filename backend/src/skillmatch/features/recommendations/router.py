@@ -41,7 +41,8 @@ def create_recommendations(
     )
 
 READ = {'x-allowed-roles': ['ADMIN', 'SUPERVISOR', 'VIEWER']}
-UNIMPLEMENTED = {501: {'description': 'Endpoint is not implemented yet.'}}
+UNIMPLEMENTED = {501: {'description': 'Endpoint is not implemented yet.',
+    'content': {'application/problem+json': {'schema': {'$ref': '#/components/schemas/ProblemDetails'}}}}}
 
 
 @router.get('/api/v1/match-runs/{match_run_id}', tags=['match-runs'], responses=UNIMPLEMENTED, status_code=501,

@@ -1,15 +1,13 @@
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
-
-from skillmatch.core.errors import ProblemDetails, ProblemError, RequestIDMiddleware, problem_handler, validation_handler
-from skillmatch.features.auth.dependencies import get_authenticated_user
-from fastapi.exceptions import RequestValidationError
-from fastapi.openapi.utils import get_openapi
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from skillmatch.core.errors import (ProblemDetails, RequestIDMiddleware, http_error_handler,
-                                    validation_error_handler)
+from skillmatch.core.errors import (
+    ProblemDetails, ProblemError, RequestIDMiddleware, http_error_handler,
+    problem_handler, validation_handler,
+)
+from skillmatch.features.auth.dependencies import get_authenticated_user
 from sqlalchemy import text
 
 from skillmatch.db.session import engine
@@ -28,12 +26,13 @@ app = FastAPI(
     responses={status: {"description": "Problem response",
                         "content": {"application/problem+json": {
                             "schema": {"$ref": "#/components/schemas/ProblemDetails"}}}}
-               for status in (400, 401, 403, 404, 405, 409, 422, 429, 500, 501, 503)},
+               for status in (400, 401, 403, 404, 405, 409, 422, 429, 500, 503)},
 )
 
 
 app.add_middleware(RequestIDMiddleware)
 app.add_exception_handler(ProblemError, problem_handler)
+app.add_exception_handler(StarletteHTTPException, http_error_handler)
 app.add_exception_handler(RequestValidationError, validation_handler)
 
 
@@ -69,6 +68,9 @@ for protected_router in (employees_router, jobs_router, recommendations_router,
                        responses=AUTH_REQUIRED_RESPONSE)
 
 
+app.include_router(auth_router)
+
+
 def custom_openapi() -> dict:
     if app.openapi_schema is None:
         schema = get_openapi(title=app.title, version=app.version,
@@ -89,32 +91,6 @@ def custom_openapi() -> dict:
                         "description": "Request correlation identifier.",
                         "schema": {"type": "string"},
                     }
-        app.openapi_schema = schema
-    return app.openapi_schema
-
-
-app.openapi = custom_openapi
-
-app.include_router(auth_router)
-
-
-def custom_openapi() -> dict:
-    if app.openapi_schema is None:
-        schema = get_openapi(title=app.title, version=app.version,
-                             description=app.description, routes=app.routes)
-        problem = ProblemDetails.model_json_schema(
-            ref_template="#/components/schemas/{model}")
-        components = schema.setdefault(
-            "components", {}).setdefault("schemas", {})
-        components.update(problem.pop("$defs", {}))
-        components["ProblemDetails"] = problem
-        for path in schema["paths"].values():
-            for operation in path.values():
-                if not isinstance(operation, dict) or "responses" not in operation:
-                    continue
-                for response in operation["responses"].values():
-                    response.setdefault("headers", {})["X-Request-ID"] = {
-                        "description": "Request correlation identifier.", "schema": {"type": "string"}}
         app.openapi_schema = schema
     return app.openapi_schema
 

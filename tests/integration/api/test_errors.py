@@ -6,8 +6,6 @@ from fastapi.testclient import TestClient
 
 from skillmatch.main import app
 
-client = TestClient(app)
-
 
 @pytest.mark.parametrize('method,path,payload,status,code', [
     ('get', '/api/v1/employees/missing', None, 404, 'NOT_FOUND'),
@@ -15,7 +13,7 @@ client = TestClient(app)
     ('post', '/health', None, 405, 'METHOD_NOT_ALLOWED'),
     ('post', '/api/v1/jobs/job-electrician/recommendations', {'topK': 0}, 422, 'VALIDATION_ERROR'),
 ])
-def test_problem_responses(method, path, payload, status, code):
+def test_problem_responses(method, path, payload, status, code, client):
     response = client.request(method, path, json=payload)
     body = response.json()
     assert response.status_code == status
@@ -34,7 +32,7 @@ def test_problem_responses(method, path, payload, status, code):
         assert response.headers['allow'] == 'GET'
 
 
-def test_success_and_documentation_have_request_ids():
+def test_success_and_documentation_have_request_ids(client):
     for path in ['/health', '/api/v1/employees', '/docs', '/openapi.json']:
         response = client.get(path)
         UUID(response.headers['x-request-id'])
@@ -43,15 +41,15 @@ def test_success_and_documentation_have_request_ids():
     assert response.json()['request_id'] == 'trace-123'
 
 
-def test_invalid_request_id_is_replaced():
+def test_invalid_request_id_is_replaced(client):
     UUID(client.get('/health', headers={'X-Request-ID': 'bad id'}).headers['x-request-id'])
 
 
-def test_unexpected_error_is_generic_and_correlated(monkeypatch):
+def test_unexpected_error_is_generic_and_correlated(monkeypatch, client):
     def fail():
         raise RuntimeError('private database password')
     monkeypatch.setattr('skillmatch.features.employees.router.get_employees', fail)
-    response = TestClient(app, raise_server_exceptions=False).get('/api/v1/employees', headers={'X-Request-ID': 'failure-123'})
+    response = TestClient(app, raise_server_exceptions=False).get('/api/v1/employees', headers={'X-Request-ID': 'failure-123', 'Authorization': client.headers['Authorization']})
     assert response.status_code == 500
     assert response.headers['content-type'] == 'application/problem+json'
     assert response.headers['x-request-id'] == response.json()['request_id'] == 'failure-123'
@@ -59,7 +57,7 @@ def test_unexpected_error_is_generic_and_correlated(monkeypatch):
     assert 'password' not in response.text
 
 
-def test_request_ids_are_isolated_between_concurrent_requests():
+def test_request_ids_are_isolated_between_concurrent_requests(client):
     def fetch(index):
         request_id = f'trace-{index}'
         response = client.get('/unknown', headers={'X-Request-ID': request_id})
@@ -68,7 +66,7 @@ def test_request_ids_are_isolated_between_concurrent_requests():
         list(pool.map(fetch, range(12)))
 
 
-def test_recommendation_metadata():
+def test_recommendation_metadata(client):
     first = client.post('/api/v1/jobs/job-electrician/recommendations', json={})
     second = client.post('/api/v1/jobs/job-electrician/recommendations', json={})
     UUID(first.json()['match_run_id'])
@@ -77,14 +75,14 @@ def test_recommendation_metadata():
     UUID(first.headers['x-request-id'])
 
 
-def test_malformed_json_has_serializable_field_errors():
+def test_malformed_json_has_serializable_field_errors(client):
     response = client.post('/api/v1/jobs/job-electrician/recommendations', content='{', headers={'Content-Type': 'application/json'})
     assert response.status_code == 422
     assert response.json()['field_errors'][0]['code'] == 'json_invalid'
     assert response.json()['request_id'] == response.headers['x-request-id']
 
 
-def test_openapi_documents_problem_shape_and_response_headers():
+def test_openapi_documents_problem_shape_and_response_headers(client):
     schema = client.get('/openapi.json').json()
     assert 'FieldError' in schema['components']['schemas']
     assert schema['components']['schemas']['ProblemDetails']['properties']['field_errors']['items']['$ref'] == '#/components/schemas/FieldError'
