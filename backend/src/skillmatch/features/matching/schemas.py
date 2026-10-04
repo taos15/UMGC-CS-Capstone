@@ -44,3 +44,17 @@ class Recommendation(BaseModel):
     explanation: str
 
     model_config = {"populate_by_name": True}
+
+
+class CandidateResult(BaseModel):
+    rank: Annotated[int, Field(ge=1)]
+    employee_id: str
+    score: Annotated[float, Field(ge=0, le=100)]
+    eligible: bool
+    component_scores: dict[str, float]
+    matched_skills: list[str]
+    missing_skills: list[str]
+    matched_certifications: list[str]
+    missing_certifications: list[str]
+    ineligible_reasons: list[str]
+    explanation: str
