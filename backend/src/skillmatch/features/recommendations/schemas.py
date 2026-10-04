@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from skillmatch.features.matching.schemas import Recommendation
+from skillmatch.features.matching.schemas import CandidateResult, Recommendation
 
 
 class RecommendationRequest(BaseModel):
@@ -23,3 +24,20 @@ class RecommendationResponse(BaseModel):
     recommendations: list[Recommendation]
 
     model_config = {"populate_by_name": True}
+
+
+class RecommendationOptions(BaseModel):
+    max_results: Annotated[int, Field(ge=1, le=100)]
+    minimum_score: Annotated[float, Field(ge=0, le=100)]
+    include_ineligible: bool
+
+
+class MatchRun(BaseModel):
+    match_run_id: str
+    job_id: str
+    requested_by: str
+    model_version: str
+    snapshot_hash: str
+    options: RecommendationOptions
+    generated_at: datetime
+    results: list[CandidateResult]
