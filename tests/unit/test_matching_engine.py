@@ -40,10 +40,11 @@ def test_partial_candidate_reports_missing_requirements() -> None:
     ]
 
 
-def test_ranking_preserves_input_order_for_equal_scores() -> None:
+def test_ranking_uses_employee_id_for_equal_scores() -> None:
     first = build_recommendation(EMPLOYEES[0], JOBS[0])
     second = first.model_copy(update={"employee_id": "equal-score"})
-    assert rank_recommendations([second, first], 100, 2) == [second, first]
+    assert rank_recommendations([second, first], 100, 2) == [first, second]
+    assert rank_recommendations([first, second], 100, 2) == [first, second]
 
 
 def test_matching_inputs_are_deeply_immutable() -> None:
