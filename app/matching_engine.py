@@ -1,6 +1,8 @@
 from app.schemas import Employee, Job, Recommendation, ScoreBreakdown
 
 
+MODEL_VERSION = "rules-v1"
+
 REQUIRED_SKILL_WEIGHT = 50
 PREFERRED_SKILL_WEIGHT = 10
 CERTIFICATION_WEIGHT = 25

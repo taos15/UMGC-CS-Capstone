@@ -56,6 +56,8 @@ class Recommendation(BaseModel):
 
 
 class RecommendationResponse(BaseModel):
+    match_run_id: str
+    model_version: str
     job_id: str = Field(alias="jobId")
     recommendations: list[Recommendation]
 
