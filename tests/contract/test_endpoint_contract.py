@@ -7,7 +7,7 @@ READ = ['ADMIN', 'SUPERVISOR', 'VIEWER']
 WRITE = ['ADMIN']
 SUPERVISE = ['ADMIN', 'SUPERVISOR']
 OPERATIONS = [
-    ('post', '/api/v1/auth/login', [], True),
+    ('post', '/api/v1/auth/login', [], False),
     ('get', '/api/v1/skills', READ, True),
     ('post', '/api/v1/skills', WRITE, True),
     ('get', '/api/v1/employees', READ, False),
@@ -39,9 +39,9 @@ def test_endpoint_role_annotations(method, path, roles, is_stub):
 
 
 @pytest.mark.parametrize('method,path,roles,is_stub', [item for item in OPERATIONS if item[3]])
-def test_stubs_explicitly_report_unimplemented(method, path, roles, is_stub):
+def test_stubs_explicitly_report_unimplemented(method, path, roles, is_stub, client):
     path = path.replace('{employee_id}', 'employee').replace('{job_id}', 'job').replace('{match_run_id}', 'run')
-    response = TestClient(app).request(method, path)
+    response = client.request(method, path)
     assert response.status_code == 501
     assert response.json()['detail'] == 'Not implemented'
 

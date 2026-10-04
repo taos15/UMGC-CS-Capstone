@@ -13,7 +13,7 @@ def test_canonical_app_preserves_openapi_contract() -> None:
     digest = hashlib.sha256(
         json.dumps(app.openapi(), sort_keys=True).encode()
     ).hexdigest()
-    assert digest == "816a52602130f38b2419db05c2a534f831ab68888e2e83e78d57462e8d08fd40"
+    assert digest == "0717b5e90311f1fe407aa8fc06db231630dac44c969c4428afe2cf0097cbf4bd"
 
 
 def test_matching_has_no_http_database_or_orchestration_imports() -> None:
