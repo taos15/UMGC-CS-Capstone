@@ -1,0 +1,34 @@
+:root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; color: #192c38; background: #f8faf9; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+.portal { min-height: 100vh; display: grid; grid-template-columns: 46% 54%; }
+.brand-panel { background: #123e42; color: #f1f8f5; padding: 48px 56px 34px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.brand-panel::after { content: ''; position: absolute; width: 580px; height: 580px; border: 1px solid #a4d8c221; border-radius: 50%; right: -320px; bottom: -340px; box-shadow: 0 0 0 65px #a4d8c209, 0 0 0 130px #a4d8c207; pointer-events: none; }
+.brand { display: flex; align-items: center; gap: 11px; color: inherit; text-decoration: none; font-size: 24px; font-weight: 650; letter-spacing: -0.8px; }
+.brand-mark { background: #c1e4ce; color: #123e42; border-radius: 11px; padding: 6px 11px; font-size: 21px; }
+.ai-badge { font-size: 10px; letter-spacing: 1px; border: 1px solid #a4d8c250; padding: 4px 6px; border-radius: 5px; }
+.brand-story { margin: auto 0; padding: 70px 0; max-width: 440px; z-index: 1; }
+.eyebrow { color: #517769; font-size: 11px; font-weight: 700; letter-spacing: 2px; margin: 0 0 18px; }
+.brand-panel .eyebrow { color: #bddfce; }
+h2 { font-size: clamp(30px, 3.3vw, 48px); line-height: 1.15; letter-spacing: -1.7px; font-weight: 550; margin: 0 0 26px; }
+.brand-story > p:not(.eyebrow) { color: #c2d7d4; font-size: 15px; line-height: 1.9; max-width: 390px; }
+.evidence-card { display: flex; align-items: center; gap: 15px; margin-top: 38px; padding: 21px 18px; border: 1px solid #a4d8c240; border-radius: 12px; background: #ffffff05; }
+.evidence-icon { width: 32px; height: 32px; flex-shrink: 0; background: #a4d8c21a; color: #bddfce; display: grid; place-items: center; border-radius: 50%; }
+.evidence-card strong { font-size: 13px; font-weight: 550; }
+.evidence-card p { color: #bdd2cf; font-size: 11px; margin: 6px 0 0; }
+.brand-panel footer { font-size: 11px; color: #bed0cc; }
+.form-area { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 72px 32px; }
+.login-panel { width: 100%; max-width: 370px; }
+h1 { font-size: 34px; font-weight: 600; letter-spacing: -1.2px; margin: 0 0 12px; }
+.intro { color: #64717a; font-size: 14px; line-height: 1.7; margin: 0 0 35px; }
+label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 9px; }
+input { width: 100%; height: 49px; border: 1px solid #c8d1cc; border-radius: 7px; background: white; padding: 12px 14px; margin-bottom: 23px; color: #192c38; }
+input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #80b79a; outline-offset: 3px; }
+.primary { width: 100%; border: 0; border-radius: 7px; background: #215847; color: white; padding: 15px 18px; display: flex; justify-content: space-between; cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 5px; }
+.primary:hover { background: #174335; }
+button:disabled { cursor: wait; opacity: 0.7; }
+.error { background: #fff0ed; color: #8e3126; padding: 12px; border-radius: 6px; font-size: 13px; line-height: 1.5; margin-top: 0; }
+.access-note { text-align: center; color: #65756e; font-size: 12px; margin: 27px 0 0; }
+.form-footer { position: absolute; bottom: 23px; font-size: 10px; color: #6a7871; letter-spacing: 0.3px; }
+@media (max-width: 760px) { .portal { grid-template-columns: 1fr; } .brand-panel { padding: 25px 26px; } .brand-story { padding: 32px 0 10px; max-width: none; } h2 { font-size: 30px; } .brand-story > p:not(.eyebrow), .evidence-card, .brand-panel footer { display: none; } .form-area { padding: 44px 26px 75px; min-height: 480px; } }
