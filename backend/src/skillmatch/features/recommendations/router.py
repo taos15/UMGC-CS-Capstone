@@ -4,6 +4,8 @@ from skillmatch.features.matching.scoring import MODEL_VERSION
 
 from fastapi import APIRouter, HTTPException
 
+from skillmatch.features.auth.dependencies import READ_ROLES, SUPERVISOR_ROLES, role_access
+
 from skillmatch.features.jobs.repository import get_job
 from skillmatch.features.recommendations.schemas import (
     RecommendationRequest,
@@ -18,7 +20,7 @@ router = APIRouter()
 @router.post(
     "/api/v1/jobs/{job_id}/recommendations",
     response_model=RecommendationResponse,
-    openapi_extra={"x-allowed-roles": ["ADMIN", "SUPERVISOR"]},
+    **role_access(*SUPERVISOR_ROLES),
     description="Allowed roles: ADMIN, SUPERVISOR. Supervisor retains final staffing authority.",
 )
 def create_recommendations(
@@ -40,13 +42,12 @@ def create_recommendations(
         ),
     )
 
-READ = {'x-allowed-roles': ['ADMIN', 'SUPERVISOR', 'VIEWER']}
 UNIMPLEMENTED = {501: {'description': 'Endpoint is not implemented yet.',
     'content': {'application/problem+json': {'schema': {'$ref': '#/components/schemas/ProblemDetails'}}}}}
 
 
 @router.get('/api/v1/match-runs/{match_run_id}', tags=['match-runs'], responses=UNIMPLEMENTED, status_code=501,
-            openapi_extra=READ,
+            **role_access(*READ_ROLES),
             description='Allowed roles: ADMIN, SUPERVISOR, VIEWER, within authorized run scope.')
 def retrieve_match_run(match_run_id: str):
     raise HTTPException(status_code=501, detail='Not implemented')
