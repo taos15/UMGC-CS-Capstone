@@ -36,7 +36,7 @@ def test_matching_has_no_http_database_or_orchestration_imports() -> None:
 
 
 def test_legacy_source_and_scaffold_are_removed() -> None:
-    assert not list((ROOT / "app").glob("*.py"))
+    assert not (ROOT / "app").exists()
     assert not list((ROOT / "backend").glob("*.py"))
     for name in ("api", "domain", "repositories", "matching", "tests"):
         assert not list((ROOT / "backend" / name).rglob("*.py"))
@@ -55,5 +55,6 @@ def test_canonical_sources_have_one_app_and_no_legacy_imports() -> None:
                 modules = [node.module or ""]
             else:
                 continue
-            assert all(module.split(".")[0] not in {"app", "backend"} for module in modules), path
+            assert all(module.split(".")[0] not in {
+                       "app", "backend"} for module in modules), path
     assert app_locations == ["backend/src/skillmatch/main.py"]
