@@ -20,4 +20,11 @@ def get_db() -> Iterator[Session]:
 
 
 def init_db() -> None:
+    # Local imports: registers each persistent feature's tables on Base.metadata
+    # before create_all runs, without db/ importing every feature at module load.
+    from skillmatch.features.feedback import models as _feedback_models  # noqa: F401
+    from skillmatch.features.recommendations import (  # noqa: F401
+        models as _recommendations_models,
+    )
+
     Base.metadata.create_all(bind=engine)
