@@ -125,3 +125,18 @@ def test_database_unavailable_health(monkeypatch: pytest.MonkeyPatch, client) ->
     assert response.status_code == 200
     assert response.json() == {"status": "degraded", "database": "unavailable"}
     assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_api_ties_are_independent_of_candidate_input_order(monkeypatch, client):
+    from skillmatch.features.employees.schemas import Employee
+    candidates = [Employee(id=employee_id, name=employee_id, skills=['electrical wiring'],
+                           certifications=['licensed electrician'], years_experience=5)
+                  for employee_id in ('z', 'a')]
+    monkeypatch.setattr('skillmatch.features.recommendations.service.get_employees', lambda ids: candidates)
+    first = client.post('/api/v1/jobs/job-electrician/recommendations', json={})
+    candidates.reverse()
+    second = client.post('/api/v1/jobs/job-electrician/recommendations', json={})
+    assert first.status_code == second.status_code == 200
+    assert first.json()['model_version'] == second.json()['model_version']
+    assert first.json()['recommendations'] == second.json()['recommendations']
+    assert [item['employeeId'] for item in first.json()['recommendations']] == ['a', 'z']
