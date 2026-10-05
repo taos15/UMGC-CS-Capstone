@@ -13,8 +13,8 @@
   snapshots `ACTIVE` candidates, scores/ranks them, and persists the match run
   before responding. `GET /api/v1/match-runs/{match_run_id}` now returns persisted
   snapshots (REC-002), with ADMIN access to all runs and requester-only access
-  for SUPERVISOR/VIEWER. Retrieval does not invoke matching. The feedback endpoint (FDBK-001) is implemented separately; it is not
-  part of this story.
+  for SUPERVISOR/VIEWER. Retrieval does not invoke matching. The feedback endpoint (FDBK-001) now appends scoped,
+  validated human decisions to audit history without assignment or model updates.
 - `Employee`/`Job` gained a `status` field and structured scoring evidence
   (`skill_evidence`/`certification_evidence`/`skill_requirement_details`) as
   part of REC-001, additive to the existing flat fields so prior employee/job

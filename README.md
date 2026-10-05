@@ -189,3 +189,17 @@ working `GET /api/v1/jobs` response with job status; that endpoint remains a
 backend stub pending approval of its list/status contract. Recommendation
 options use the currently supported `top_k`, `minimum_score`, and
 `include_missing_skills` fields and preserve their tested defaults.
+
+## Supervisor feedback
+
+`POST /api/v1/match-runs/{match_run_id}/feedback` records an append-only audit
+entry and returns HTTP 201 with the saved `Feedback`. ADMIN may submit against
+any stored run; SUPERVISOR only against their own. VIEWER cannot submit.
+
+Example body: `{"decision":"SELECTED","selected_employee_id":"employee-id","rating":5,"comment":"Reviewed fit."}`.
+`SELECTED` requires an eligible candidate from the stored run. For `NOT_SELECTED`
+or `DEFERRED`, omit `selected_employee_id`; rating and comment are optional.
+The server supplies the caller ID, run ID, and creation time. Invalid selections
+return `409 FEEDBACK_CONFLICT`; invalid field combinations return 422.
+Repeated valid submissions append separate entries. Feedback never assigns staff,
+changes historical rankings, or updates the live matching model.

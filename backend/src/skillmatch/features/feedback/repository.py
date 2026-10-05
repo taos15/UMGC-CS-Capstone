@@ -1,5 +1,6 @@
 """Persistence operations for supervisor feedback (DB-002)."""
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, select
 
 from skillmatch.features.feedback.models import Feedback
@@ -23,9 +24,13 @@ def create_feedback(
         rating=rating,
         comment=comment,
     )
-    session.add(feedback)
-    session.commit()
-    session.refresh(feedback)
+    try:
+        session.add(feedback)
+        session.commit()
+        session.refresh(feedback)
+    except SQLAlchemyError:
+        session.rollback()
+        raise
     return feedback
 
 

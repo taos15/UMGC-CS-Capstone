@@ -1,7 +1,7 @@
 """Persistence model for supervisor feedback (DB-002).
 
-Feedback validation and HTTP wiring are a separate story; feedback never
-updates the live matching model automatically.
+The Feedback/Audit service validates stored-run scope and selection evidence;
+feedback never assigns staff or updates the live matching model automatically.
 """
 
 import uuid

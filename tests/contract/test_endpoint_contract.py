@@ -20,7 +20,7 @@ OPERATIONS = [
     ('put', '/api/v1/jobs/{job_id}', WRITE, True),
     ('post', '/api/v1/jobs/{job_id}/recommendations', SUPERVISE, False),
     ('get', '/api/v1/match-runs/{match_run_id}', READ, False),
-    ('post', '/api/v1/match-runs/{match_run_id}/feedback', SUPERVISE, True),
+    ('post', '/api/v1/match-runs/{match_run_id}/feedback', SUPERVISE, False),
     ('get', '/api/v1/health', None, False),
 ]
 
