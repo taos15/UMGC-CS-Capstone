@@ -20,7 +20,7 @@ MATRIX = [
     ('GET', '/api/v1/jobs/job-electrician', ROLES, 200),
     ('PUT', '/api/v1/jobs/job-electrician', ('ADMIN',), 501),
     ('POST', '/api/v1/jobs/job-electrician/recommendations', ('ADMIN', 'SUPERVISOR'), 200),
-    ('GET', '/api/v1/match-runs/run', ROLES, 501),
+    ('GET', '/api/v1/match-runs/run', ROLES, 404),
     ('POST', '/api/v1/match-runs/run/feedback', ('ADMIN', 'SUPERVISOR'), 501),
 ]
 
@@ -74,7 +74,7 @@ def test_forbidden_recommendation_never_accesses_job_or_candidates(role_client, 
     def protected_call(*args, **kwargs):
         pytest.fail('Protected data was accessed before authorization')
     monkeypatch.setattr('skillmatch.features.recommendations.router.get_job', protected_call)
-    monkeypatch.setattr('skillmatch.features.recommendations.router.recommend_employees', protected_call)
+    monkeypatch.setattr('skillmatch.features.recommendations.router.generate_recommendations', protected_call)
     for job_id in ('job-electrician', 'missing'):
         response = client.post(f'/api/v1/jobs/{job_id}/recommendations', json={})
         assert response.status_code == 403

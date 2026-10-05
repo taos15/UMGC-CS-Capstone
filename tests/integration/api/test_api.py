@@ -24,6 +24,7 @@ def test_recommendations_are_ranked_and_support_request_options(client) -> None:
             "topK": 1,
             "includeMissingSkills": False,
             "minimumScore": 0,
+            "includeIneligible": True,
         },
     )
 
@@ -31,17 +32,16 @@ def test_recommendations_are_ranked_and_support_request_options(client) -> None:
     result = response.json()
     assert result["jobId"] == "job-electrician"
     assert len(result["recommendations"]) == 1
-    assert result["recommendations"][0]["employeeId"] == "emp-alex"
-    assert result["recommendations"][0]["missingRequirements"] == []
-    assert result["recommendations"][0]["scoreBreakdown"] == {
-        "requiredSkills": 50,
-        "preferredSkills": 10,
-        "requiredCertifications": 25,
-        "experience": 15,
+    assert result["recommendations"][0]["employee_id"] == "emp-alex"
+    assert result["recommendations"][0]["eligible"] is True
+    assert result["recommendations"][0]["missing_skills"] == []
+    assert result["recommendations"][0]["component_scores"] == {
+        "required_skills": 1.0,
+        "preferred_skills": 1.0,
+        "required_certifications": 1.0,
+        "experience": 1.0,
     }
-    assert sum(result["recommendations"][0]["scoreBreakdown"].values()) == result[
-        "recommendations"
-    ][0]["score"]
+    assert result["recommendations"][0]["score"] == 100.0
 
 
 def test_missing_job_returns_not_found(client) -> None:
@@ -56,6 +56,7 @@ def test_missing_job_returns_not_found(client) -> None:
 def test_employee_and_job_reads_preserve_seed_data(client) -> None:
     employees = client.get("/api/v1/employees").json()
     assert [employee["id"] for employee in employees] == ["emp-alex", "emp-jordan", "emp-sam"]
+    assert all(employee["status"] == "ACTIVE" for employee in employees)
     assert client.get("/api/v1/employees/emp-alex").json() == employees[0]
     assert client.get("/api/v1/jobs/job-hvac").json() == {
         "id": "job-hvac",
@@ -64,6 +65,13 @@ def test_employee_and_job_reads_preserve_seed_data(client) -> None:
         "preferred_skills": [],
         "required_certifications": ["epa 608"],
         "minimum_years_experience": 3.0,
+        "status": "OPEN",
+        "skill_requirement_details": [
+            {"skill_id": "hvac repair", "level": "REQUIRED",
+             "minimum_proficiency": 3, "importance": 3},
+            {"skill_id": "troubleshooting", "level": "REQUIRED",
+             "minimum_proficiency": 3, "importance": 2},
+        ],
     }
 
 
@@ -81,32 +89,53 @@ def test_missing_resources(path: str, detail: str, client) -> None:
     }
 
 
-def test_recommendation_defaults_scores_and_explanation(client) -> None:
+def test_recommendation_defaults_excludes_ineligible_candidates(client) -> None:
+    """Jordan/Sam are missing the mandatory 'licensed electrician' certification,
+    so they are eligibility-gated out of the default (include_ineligible=False) result."""
     response = client.post("/api/v1/jobs/job-electrician/recommendations", json={})
     assert response.status_code == 200
     recommendations = response.json()["recommendations"]
-    assert [(item["employeeId"], item["score"]) for item in recommendations] == [
-        ("emp-alex", 100.0), ("emp-jordan", 55.33), ("emp-sam", 31.67)
+    assert [(item["employee_id"], item["score"]) for item in recommendations] == [
+        ("emp-alex", 100.0)
     ]
-    assert recommendations[1]["missingRequirements"] == ["blueprint reading", "licensed electrician"]
+
+
+def test_recommendation_with_ineligible_candidates_shown(client) -> None:
+    response = client.post(
+        "/api/v1/jobs/job-electrician/recommendations", json={"includeIneligible": True}
+    )
+    assert response.status_code == 200
+    recommendations = response.json()["recommendations"]
+    assert [(item["employee_id"], item["score"], item["eligible"]) for item in recommendations] == [
+        ("emp-alex", 100.0, True),
+        ("emp-jordan", 67.29, False),
+        ("emp-sam", 25.71, False),
+    ]
+    assert recommendations[1]["missing_skills"] == ["blueprint reading"]
+    assert recommendations[1]["missing_certifications"] == ["licensed electrician"]
+    assert recommendations[1]["ineligible_reasons"] == [
+        "MISSING_MANDATORY_CERTIFICATION:licensed electrician"
+    ]
     assert recommendations[1]["explanation"] == (
-        "Jordan Lee matches 2 of 3 required skills and holds 0 of 1 required certifications. "
-        "They have 4 years of experience, below the 5-year requirement. "
-        "Missing requirements: blueprint reading, licensed electrician."
+        "Jordan Lee scored 67.29 for Commercial Electrician. "
+        "Ineligible: MISSING_MANDATORY_CERTIFICATION:licensed electrician. "
+        "Missing required skills: blueprint reading. "
+        "Missing required certifications: licensed electrician."
     )
 
 
 @pytest.mark.parametrize("options,expected", [
     ({"candidateEmployeeIds": []}, []),
     ({"candidateEmployeeIds": ["unknown"]}, []),
-    ({"candidateEmployeeIds": ["emp-jordan", "emp-jordan"]}, ["emp-jordan"]),
-    ({"minimumScore": 55.33}, ["emp-alex", "emp-jordan"]),
-    ({"minimumScore": 55.34}, ["emp-alex"]),
+    ({"candidateEmployeeIds": ["emp-jordan", "emp-jordan"]}, []),
+    ({"candidateEmployeeIds": ["emp-jordan", "emp-jordan"], "includeIneligible": True}, ["emp-jordan"]),
+    ({"includeIneligible": True, "minimumScore": 30}, ["emp-alex", "emp-jordan"]),
+    ({"includeIneligible": True, "minimumScore": 70}, ["emp-alex"]),
 ])
 def test_recommendation_candidate_and_threshold_options(options: dict, expected: list[str], client) -> None:
     response = client.post("/api/v1/jobs/job-electrician/recommendations", json=options)
     assert response.status_code == 200
-    assert [item["employeeId"] for item in response.json()["recommendations"]] == expected
+    assert [item["employee_id"] for item in response.json()["recommendations"]] == expected
 
 
 @pytest.mark.parametrize("options", [
@@ -128,15 +157,35 @@ def test_database_unavailable_health(monkeypatch: pytest.MonkeyPatch, client) ->
 
 
 def test_api_ties_are_independent_of_candidate_input_order(monkeypatch, client):
-    from skillmatch.features.employees.schemas import Employee
-    candidates = [Employee(id=employee_id, name=employee_id, skills=['electrical wiring'],
-                           certifications=['licensed electrician'], years_experience=5)
-                  for employee_id in ('z', 'a')]
+    from datetime import date
+    from skillmatch.features.employees.schemas import Employee, EmployeeCertification, EmployeeSkill
+
+    def make_employee(employee_id: str) -> Employee:
+        return Employee(
+            id=employee_id, name=employee_id,
+            skills=['electrical wiring', 'blueprint reading', 'troubleshooting'],
+            certifications=['licensed electrician'], years_experience=5,
+            skill_evidence=[
+                EmployeeSkill(skill_id='electrical wiring', proficiency=5),
+                EmployeeSkill(skill_id='blueprint reading', proficiency=5),
+                EmployeeSkill(skill_id='troubleshooting', proficiency=5),
+            ],
+            certification_evidence=[
+                EmployeeCertification(code='licensed electrician', issued_on=date(2020, 1, 1)),
+            ],
+        )
+
+    candidates = [make_employee(employee_id) for employee_id in ('z', 'a')]
     monkeypatch.setattr('skillmatch.features.recommendations.service.get_employees', lambda ids: candidates)
     first = client.post('/api/v1/jobs/job-electrician/recommendations', json={})
     candidates.reverse()
     second = client.post('/api/v1/jobs/job-electrician/recommendations', json={})
     assert first.status_code == second.status_code == 200
     assert first.json()['model_version'] == second.json()['model_version']
-    assert first.json()['recommendations'] == second.json()['recommendations']
-    assert [item['employeeId'] for item in first.json()['recommendations']] == ['a', 'z']
+    recommendations = first.json()['recommendations']
+    assert [item['employee_id'] for item in recommendations] == ['a', 'z']
+    assert all(item['eligible'] for item in recommendations)
+    # 80.0: full marks on required skills/cert/experience, but neither candidate
+    # has the preferred "project coordination" skill (worth 20% weight).
+    assert [item['score'] for item in recommendations] == [80.0, 80.0]
+    assert [item['employee_id'] for item in second.json()['recommendations']] == ['a', 'z']

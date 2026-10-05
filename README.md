@@ -157,8 +157,8 @@ bearer tokens return `AUTH_REQUIRED`. Both use `WWW-Authenticate: Bearer`.
 Error bodies and every response carry matching request IDs. Invalid auth
 configuration fails with generic HTTP 503 `AUTH_UNAVAILABLE`.
 Health endpoints remain public. Role authorization is enforced on every
-workforce route. Match-run retrieval is still a stub; run-scope checks must be
-connected when stored-run retrieval is implemented.
+workforce route. Match-run retrieval returns stored snapshots; ADMIN may read all runs, while
+SUPERVISOR and VIEWER may read only their own runs. Scope is checked before candidate evidence is loaded.
 
 ## React login portal
 

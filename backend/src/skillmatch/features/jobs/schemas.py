@@ -3,6 +3,13 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 
+class JobSkillRequirement(BaseModel):
+    skill_id: str
+    level: Literal['REQUIRED', 'PREFERRED']
+    minimum_proficiency: Annotated[int, Field(ge=1, le=5)]
+    importance: Annotated[int, Field(ge=1, le=3)]
+
+
 class Job(BaseModel):
     id: str
     title: str
@@ -10,13 +17,8 @@ class Job(BaseModel):
     preferred_skills: list[str] = Field(default_factory=list)
     required_certifications: list[str]
     minimum_years_experience: Annotated[float, Field(ge=0)]
-
-
-class JobSkillRequirement(BaseModel):
-    skill_id: str
-    level: Literal['REQUIRED', 'PREFERRED']
-    minimum_proficiency: Annotated[int, Field(ge=1, le=5)]
-    importance: Annotated[int, Field(ge=1, le=3)]
+    status: Literal['OPEN', 'CLOSED'] = 'OPEN'
+    skill_requirement_details: list[JobSkillRequirement] = Field(default_factory=list)
 
 
 class JobProfile(BaseModel):

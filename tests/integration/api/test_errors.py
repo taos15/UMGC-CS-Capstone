@@ -71,7 +71,7 @@ def test_recommendation_metadata(client):
     second = client.post('/api/v1/jobs/job-electrician/recommendations', json={})
     UUID(first.json()['match_run_id'])
     assert first.json()['match_run_id'] != second.json()['match_run_id']
-    assert first.json()['model_version'] == second.json()['model_version'] == 'rules-v1'
+    assert first.json()['model_version'] == second.json()['model_version'] == 'rpce-55-20-15-10-v1'
     UUID(first.headers['x-request-id'])
 
 
