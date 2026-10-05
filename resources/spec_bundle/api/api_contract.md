@@ -110,5 +110,13 @@ Approved in this implementation session:
   skill/certification/experience criteria returns `422 JOB_HAS_NO_CRITERIA`.
   The orchestrator snapshots `ACTIVE` candidates only - `INACTIVE` employees
   are excluded before scoring, not merely marked ineligible.
-- `GET /match-runs/{match_run_id}` remains unimplemented (REC-002); only the
-  repository-level retrieval exists so far.
+- `GET /match-runs/{match_run_id}` returns the persisted snapshot (REC-002).
+
+## Approved match-run retrieval scope (REC-002)
+
+Approved by the user in this implementation session:
+
+- ADMIN can read all stored runs. SUPERVISOR and VIEWER can read only runs whose `requested_by` equals their authenticated user ID.
+- Unknown IDs return `404 MATCH_RUN_NOT_FOUND`. Out-of-scope runs return generic `403 FORBIDDEN`, without rankings, evidence, or requester details.
+- GET returns the canonical `MatchRun` shape, with snake_case options and results, UTC `generated_at`, and stored rank ordering. Historical camelCase option keys are normalized without modifying stored rows.
+- Retrieval never reads live employee/job profiles or invokes matching. Database failures return `503 DATABASE_UNAVAILABLE`.
