@@ -159,3 +159,33 @@ configuration fails with generic HTTP 503 `AUTH_UNAVAILABLE`.
 Health endpoints remain public. Role authorization is enforced on every
 workforce route. Match-run retrieval is still a stub; run-scope checks must be
 connected when stored-run retrieval is implemented.
+
+## React login portal
+
+The React app is in `frontend/` and requires Node.js 24 or newer. Start the configured backend on port 8000,
+then run:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open the local URL printed by Vite. Its development proxy forwards `/api`
+requests to `http://127.0.0.1:8000`; production hosting must route `/api` to the
+backend on the same origin. Build with `npm run build`, and run frontend tests
+with `npm test`. `npm run preview` serves the built assets only.
+
+The username/password form calls the approved login endpoint. Bearer tokens
+are held in memory and session storage for the current tab, surviving refresh
+until expiry; passwords are never stored. Logout, token expiry, or a protected
+request receiving HTTP 401 clears the session. A 403 preserves the session.
+The shared `frontend/src/api/client.js` attaches `Authorization: Bearer ...`
+to subsequent API requests. All role authorization remains on the server.
+After login, the workspace displays jobs with an OPEN filter, job details,
+and recommendation requests. Recommendations display server-provided scores
+and explanations; the UI never recomputes scores. The page currently needs a
+working `GET /api/v1/jobs` response with job status; that endpoint remains a
+backend stub pending approval of its list/status contract. Recommendation
+options use the currently supported `top_k`, `minimum_score`, and
+`include_missing_skills` fields and preserve their tested defaults.

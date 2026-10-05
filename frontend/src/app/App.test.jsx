@@ -20,15 +20,15 @@ async function submitLogin() {
 }
 
 test('login stores token, clears password, and authenticates subsequent requests', async () => {
-  fetch.mockResolvedValueOnce(loginReply()).mockResolvedValueOnce(reply([]));
+  fetch.mockResolvedValueOnce(loginReply()).mockResolvedValueOnce(reply([])).mockResolvedValueOnce(reply([]));
   render(<App />);
   await submitLogin();
-  expect(await screen.findByRole('heading', { name: 'You’re signed in' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: 'Jobs' })).toBeVisible();
   expect(fetch.mock.calls[0][0]).toBe('/api/v1/auth/login');
   expect(fetch.mock.calls[0][1].headers.has('Authorization')).toBe(false);
   expect(sessionStorage.getItem('skillmatch.session')).not.toContain('test-password');
   await apiRequest('/employees');
-  expect(fetch.mock.calls[1][1].headers.get('Authorization')).toBe('Bearer test-token');
+  expect(fetch.mock.calls[2][1].headers.get('Authorization')).toBe('Bearer test-token');
   await userEvent.click(screen.getByRole('button', { name: 'Sign out' }));
   expect(screen.getByLabelText('Password')).toHaveValue('');
   expect(sessionStorage.getItem('skillmatch.session')).toBeNull();
@@ -93,7 +93,7 @@ test('pending login prevents duplicate submission', async () => {
   expect(fetch).toHaveBeenCalledTimes(1);
   const { act } = await import('@testing-library/react');
   await act(async () => { complete(loginReply()); });
-  expect(screen.getByRole('heading', { name: 'You’re signed in' })).toBeVisible();
+  expect(screen.getByRole('heading', { name: 'Jobs' })).toBeVisible();
 });
 
 test('session is restored on reload without storing credentials', async () => {
