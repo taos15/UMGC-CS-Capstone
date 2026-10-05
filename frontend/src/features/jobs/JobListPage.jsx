@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getJob, listJobs, requestRecommendations } from '../../api/jobs';
 import './jobs.css';
+import RecommendationResults from '../recommendations/RecommendationResults';
 
 function failureMessage(error, action) {
   if (error.status === 403) return `You do not have permission to ${action}.`;
@@ -102,7 +103,7 @@ export default function JobListPage({ onLogout }) {
             <h3>Required skills</h3><div className="skill-tags">{detail.required_skills?.length ? detail.required_skills.map(skill => <span key={skill}>{skill}</span>) : <span>No required skills listed.</span>}</div>
             <h3>Required certifications</h3><div className="skill-tags">{detail.required_certifications?.length ? detail.required_certifications.map(code => <span key={code}>{code}</span>) : <span>No mandatory certifications listed.</span>}</div>
             {detail.status !== 'OPEN' ? <p>Recommendations are available for OPEN jobs.</p> : <form onSubmit={request} aria-busy={pending} className="recommendation-form"><h3>Recommendation options</h3><div className="options-grid"><div><label htmlFor="top-k">Maximum results</label><input id="top-k" type="number" min="1" max="100" step="1" required value={topK} onChange={event => setTopK(event.target.value)} disabled={pending} /></div><div><label htmlFor="minimum-score">Minimum score</label><input id="minimum-score" type="number" min="0" max="100" step="any" required value={minimumScore} onChange={event => setMinimumScore(event.target.value)} disabled={pending} /></div></div><label className="checkbox-label"><input type="checkbox" checked={includeGaps} onChange={event => setIncludeGaps(event.target.checked)} disabled={pending} />Show missing skills and credentials</label>{requestError && <p className="error" role="alert">{requestError}</p>}<button className="primary" type="submit" disabled={pending}>{pending ? 'Requesting…' : 'Request recommendations'}</button></form>}
-            {results && <section className="recommendation-results" aria-label="Recommendations"><h3>Recommendations</h3><p className="result-note">Review these results before making a staffing decision.</p>{results.recommendations?.length ? <ol>{results.recommendations.map(candidate => <li key={candidate.employeeId}><div><strong>{candidate.employeeName}</strong><span>{candidate.score}/100</span></div><p>{candidate.explanation}</p></li>)}</ol> : <p>No candidates meet these options.</p>}</section>}
+            {results && <RecommendationResults result={results} />}
           </>}
         </>}
       </section></div>}

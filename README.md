@@ -183,8 +183,10 @@ request receiving HTTP 401 clears the session. A 403 preserves the session.
 The shared `frontend/src/api/client.js` attaches `Authorization: Bearer ...`
 to subsequent API requests. All role authorization remains on the server.
 After login, the workspace displays jobs with an OPEN filter, job details,
-and recommendation requests. Recommendations display server-provided scores
-and explanations; the UI never recomputes scores. The page currently needs a
+and recommendation requests. Recommendations preserve server rank order and display scores, component
+values, matched/missing skills and certifications, eligibility reasons, and
+server explanations. Run ID and model version identify the returned evidence;
+the UI never recomputes scores or assigns employees. The page currently needs a
 working `GET /api/v1/jobs` response with job status; that endpoint remains a
 backend stub pending approval of its list/status contract. Recommendation
 options use the currently supported `top_k`, `minimum_score`, and
