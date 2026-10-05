@@ -26,14 +26,19 @@ def create_match_run(
         snapshot_hash=snapshot_hash,
         options=options,
     )
-    session.add(match_run)
-    session.flush()
+    try:
+        session.add(match_run)
+        session.flush()
+        for result in results:
+            session.add(CandidateResult(match_run_id=match_run.match_run_id, **result))
+        session.flush()
+        # Retain the complete run DTO without a fallible refresh after commit.
+        session.expunge(match_run)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
 
-    for result in results:
-        session.add(CandidateResult(match_run_id=match_run.match_run_id, **result))
-
-    session.commit()
-    session.refresh(match_run)
     return match_run
 
 
