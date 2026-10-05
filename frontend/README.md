@@ -4,6 +4,8 @@ Requires Node.js 24 or later. From this directory, run `npm ci`, then `npm run d
 
 After login, the portal opens the job recommendations page. Workspace navigation also opens employee and job profile management. Both flows share the same session and API client; the session expires automatically.
 
+Recommendation results consume the canonical snake_case CandidateResult response. Candidate cards display employee IDs (the contract has no separate employee name), server ranks and 0–100 scores, normalized component values, matched/missing skill and certification evidence, eligibility reasons, and the server explanation. They preserve server ordering, show empty/malformed response states, and remind supervisors that final staffing authority remains human.
+
 Employee and job forms use the canonical snake_case profile contracts, including skills and certifications. Updates send the exact version from the last successful GET/PUT. A `409 STALE_VERSION` keeps the draft, blocks further changes on the server, and offers a confirmed reload. Profiles without server versions cannot be edited or deleted.
 
 Permanent deletion requires confirmation and sends `DELETE` with JSON `{ "version": <last-read version> }`; successful 204 responses return to the list. The approved ADMIN-only deletion contract is recorded in `resources/spec_bundle/api/api_contract.md`. Server authorization remains authoritative; non-admin attempts surface permission errors.

@@ -32,7 +32,7 @@ test('shows OPEN jobs by default and allows all-status filtering', async () => {
 test('selected job details and snake_case request options use canonical URLs', async () => {
   fetch.mockImplementation(async path => {
     if (path.endsWith('/recommendations')) return reply({ jobId: 'electrician', match_run_id: 'run-id', model_version: 'rules-v1', recommendations: [
-      { employeeId: 'emp-1', employeeName: 'Alex', score: 90, explanation: 'Matches required skills.' },
+      { rank: 1, employee_id: 'emp-1', score: 90, eligible: true, component_scores: {required_skills: .9}, matched_skills: ['Wiring'], missing_skills: ['Inspection'], matched_certifications: ['License'], missing_certifications: [], ineligible_reasons: [], explanation: 'Matches required skills.' },
     ] });
     return reply(path === '/api/v1/jobs' ? jobs : jobs[0]);
   });
@@ -40,7 +40,11 @@ test('selected job details and snake_case request options use canonical URLs', a
   await userEvent.click(await screen.findByRole('button', { name: /Commercial Electrician/ }));
   expect(await screen.findByText('Wiring')).toBeVisible();
   await userEvent.click(screen.getByRole('button', { name: 'Request recommendations' }));
-  expect(await screen.findByText('Alex')).toBeVisible();
+  expect(await screen.findByText('Employee emp-1')).toBeVisible();
+  expect(screen.getByText('Rank 1')).toBeVisible();
+  expect(screen.getByText('Inspection')).toBeVisible();
+  expect(screen.getByText('Eligible')).toBeVisible();
+  expect(screen.getByText('0.9/1')).toBeVisible();
   const request = fetch.mock.calls.find(([path]) => path.endsWith('/recommendations'));
   expect(request[0]).toBe('/api/v1/jobs/electrician/recommendations');
   expect(JSON.parse(request[1].body)).toEqual({ top_k: 5, minimum_score: 0, include_missing_skills: true });
@@ -108,7 +112,7 @@ test('late recommendations for a previously selected job are discarded', async (
   await userEvent.click(await screen.findByRole('button', { name: 'Request recommendations' }));
   await userEvent.click(screen.getByRole('button', { name: /HVAC Technician/ }));
   const { act } = await import('@testing-library/react');
-  await act(async () => { complete(reply({ recommendations: [{ employeeId: 'old', employeeName: 'Old result', score: 90 }] })); });
+  await act(async () => { complete(reply({ recommendations: [{ rank: 1, employee_id: 'old', score: 90, eligible: true, component_scores: {}, matched_skills: [], missing_skills: [], matched_certifications: [], missing_certifications: [], ineligible_reasons: [], explanation: 'Old result' }] })); });
   expect(await screen.findByRole('heading', { name: 'HVAC Technician' })).toBeVisible();
   expect(screen.queryByText('Old result')).not.toBeInTheDocument();
 });
