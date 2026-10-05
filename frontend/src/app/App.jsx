@@ -1,5 +1,6 @@
 import React, { useEffect, useSyncExternalStore } from 'react';
 import LoginPage from '../features/auth/LoginPage';
+import JobListPage from '../features/jobs/JobListPage';
 import { clearSession, getSession, subscribe } from '../features/auth/session';
 import './styles.css';
 
@@ -10,6 +11,8 @@ export default function App() {
     const timer = setTimeout(clearSession, Math.max(0, session.expiresAt - Date.now()));
     return () => clearTimeout(timer);
   }, [session]);
+
+  if (session) return <JobListPage onLogout={clearSession} />;
 
   return <main className="portal">
     <aside className="brand-panel">
@@ -23,11 +26,7 @@ export default function App() {
       <footer>Decision support, with people in control.</footer>
     </aside>
     <div className="form-area">
-      {session ? <section className="login-panel" aria-labelledby="signed-in-title">
-        <p className="eyebrow">WORKSPACE</p><h1 id="signed-in-title">You’re signed in</h1>
-        <p className="intro">Welcome to your workspace. Your session is active.</p>
-        <button className="primary" onClick={clearSession}>Sign out<span aria-hidden="true">↗</span></button>
-      </section> : <LoginPage />}
+      <LoginPage />
       <p className="form-footer">SkillMatch AI · Workforce decision support</p>
     </div>
   </main>;
