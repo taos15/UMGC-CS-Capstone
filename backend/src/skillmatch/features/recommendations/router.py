@@ -51,7 +51,10 @@ def create_recommendations(
     session: Annotated[Session, Depends(get_db)],
     user: Annotated[AuthenticatedUser, Depends(get_authenticated_user)],
 ) -> RecommendationResponse:
-    job = get_job(job_id)
+    try:
+        job = get_job(job_id)
+    except SQLAlchemyError:
+        raise ProblemError(503, 'DATABASE_UNAVAILABLE', 'Recommendations are temporarily unavailable.') from None
     if job is None:
         raise ProblemError(404, "JOB_NOT_FOUND", "Job not found.")
 
