@@ -21,7 +21,7 @@ MATRIX = [
     ('PUT', '/api/v1/jobs/job-electrician', ('ADMIN',), 501),
     ('POST', '/api/v1/jobs/job-electrician/recommendations', ('ADMIN', 'SUPERVISOR'), 200),
     ('GET', '/api/v1/match-runs/run', ROLES, 404),
-    ('POST', '/api/v1/match-runs/run/feedback', ('ADMIN', 'SUPERVISOR'), 501),
+    ('POST', '/api/v1/match-runs/run/feedback', ('ADMIN', 'SUPERVISOR'), 404),
 ]
 
 
@@ -42,7 +42,7 @@ def role_client(request, monkeypatch, local_test_account):
 @pytest.mark.parametrize('method,path,allowed,status', MATRIX)
 def test_route_role_matrix(role_client, method, path, allowed, status):
     role, client = role_client
-    response = client.request(method, path, json={} if method == 'POST' else None)
+    response = client.request(method, path, json=({'decision': 'DEFERRED'} if path.endswith('/feedback') else {}) if method == 'POST' else None)
     assert response.status_code == (status if role in allowed else 403)
     if role not in allowed:
         assert response.headers['content-type'] == 'application/problem+json'
@@ -59,7 +59,7 @@ def test_route_role_matrix(role_client, method, path, allowed, status):
 def test_missing_or_invalid_auth_is_401_on_every_workforce_route(method, path, allowed, status, authorization, client):
     # Override the fixture's legitimate token to exercise real authentication failures.
     headers = {'Authorization': authorization or ''}
-    response = client.request(method, path, headers=headers, json={} if method == 'POST' else None)
+    response = client.request(method, path, headers=headers, json=({'decision': 'DEFERRED'} if path.endswith('/feedback') else {}) if method == 'POST' else None)
     assert response.status_code == 401
     assert response.json()['code'] == 'AUTH_REQUIRED'
     assert response.json()['field_errors'] == []

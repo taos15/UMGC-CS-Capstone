@@ -19,6 +19,7 @@ from skillmatch.features.recommendations.schemas import (
     RecommendationRequest,
     RecommendationResponse,
 )
+from skillmatch.features.recommendations.access import authorize_match_run
 from skillmatch.features.recommendations.service import generate_recommendations
 from skillmatch.features.recommendations.repository import get_match_run, build_match_run_snapshot
 
@@ -93,8 +94,7 @@ def retrieve_match_run(
         stored = get_match_run(session, match_run_id)
         if stored is None:
             raise ProblemError(404, 'MATCH_RUN_NOT_FOUND', 'Match run not found.')
-        if user.role != 'ADMIN' and stored.requested_by != str(user.user_id):
-            raise ProblemError(403, 'FORBIDDEN', 'You do not have permission to perform this action.')
+        authorize_match_run(user, stored)
         return build_match_run_snapshot(session, stored)
     except SQLAlchemyError:
         raise ProblemError(503, 'DATABASE_UNAVAILABLE', 'Match runs are temporarily unavailable.') from None
