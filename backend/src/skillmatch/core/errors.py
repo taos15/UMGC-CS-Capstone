@@ -44,7 +44,8 @@ def problem_response(status: int, code: str, detail: str, request_id: str,
                           detail=detail, request_id=request_id, field_errors=field_errors or [])
     response_headers = {key: value for key, value in (headers or {}).items()
                         if key.lower() not in {'content-type', 'content-length', 'x-request-id'}}
-    response_headers.update({'X-Request-ID': request_id, 'Cache-Control': 'no-store'})
+    response_headers.update(
+        {'X-Request-ID': request_id, 'Cache-Control': 'no-store'})
     if status == 401:
         response_headers.setdefault('WWW-Authenticate', 'Bearer')
     return JSONResponse(body.model_dump(), status_code=status,

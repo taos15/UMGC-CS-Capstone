@@ -70,3 +70,14 @@ Approved by the user in this implementation session:
   signing secret or default account is used.
 - Login and health remain public. Workforce routes validate bearer tokens and
   enforce the section 5 role matrix through centralized route dependencies.
+
+## Approved permanent-deletion amendment
+
+Approved by the user in this implementation session (permanent deletion replaces the proposed archive behavior):
+
+- ADMIN-only `DELETE /employees/{employee_id}` and `DELETE /jobs/{job_id}` accept JSON `{"version": <last-read positive integer version>}`.
+- Success returns HTTP 204 with no body and permanently removes the profile.
+- A stale version returns `409 STALE_VERSION`; missing IDs use the existing employee/job not-found code.
+- Stored match-run snapshots and feedback remain immutable historical records. Deletion does not recompute or remove them.
+- The portal requires explicit permanent-deletion confirmation. A stale DELETE retains the draft and requires an explicit reload; it never retries with a guessed version.
+- Backend persistence and DELETE routes must implement this contract before live deletion is available.
