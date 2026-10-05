@@ -78,3 +78,20 @@ def test_get_feedback_for_match_run_returns_only_matching_rows() -> None:
 
         assert len(feedback_for_a) == 1
         assert feedback_for_a[0].decision == "NOT_SELECTED"
+
+
+def test_failed_feedback_commit_rolls_back_pending_audit_row(monkeypatch) -> None:
+    import pytest
+    from sqlalchemy.exc import OperationalError
+    with _session() as session:
+        run = create_match_run(
+            session, job_id='job', requested_by='supervisor', model_version='v1',
+            snapshot_hash='hash', options={}, results=[],
+        )
+        def failed_commit():
+            raise OperationalError('INSERT feedback', {}, Exception('database unavailable'))
+        monkeypatch.setattr(session, 'commit', failed_commit)
+        with pytest.raises(OperationalError):
+            create_feedback(session, match_run_id=run.match_run_id, user_id='supervisor', decision='DEFERRED')
+        assert not session.new
+        assert get_feedback_for_match_run(session, run.match_run_id) == []

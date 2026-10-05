@@ -120,3 +120,14 @@ Approved by the user in this implementation session:
 - Unknown IDs return `404 MATCH_RUN_NOT_FOUND`. Out-of-scope runs return generic `403 FORBIDDEN`, without rankings, evidence, or requester details.
 - GET returns the canonical `MatchRun` shape, with snake_case options and results, UTC `generated_at`, and stored rank ordering. Historical camelCase option keys are normalized without modifying stored rows.
 - Retrieval never reads live employee/job profiles or invokes matching. Database failures return `503 DATABASE_UNAVAILABLE`.
+
+## Approved feedback contract (FDBK-001)
+
+Approved by the user in this implementation session:
+
+- `POST /match-runs/{match_run_id}/feedback` accepts `decision` (`SELECTED`, `NOT_SELECTED`, `DEFERRED`) and optional `selected_employee_id`, `rating`, and `comment`. Unknown fields are rejected; run ID, caller ID, and creation time are server-controlled.
+- `SELECTED` requires `selected_employee_id`. It must reference an eligible candidate in the stored run, otherwise return `409 FEEDBACK_CONFLICT`. Other decisions require a null/omitted selected employee; invalid field combinations return `422 VALIDATION_ERROR`.
+- ADMIN can submit feedback against any run; SUPERVISOR only against their own runs. VIEWER cannot submit. Missing runs return `404 MATCH_RUN_NOT_FOUND`; out-of-scope access returns generic `403 FORBIDDEN` before candidate evidence is loaded.
+- Success returns HTTP 201 with the saved canonical `Feedback`, including server-authenticated `user_id` and UTC `created_at`. Existing rating/comment types are preserved without inventing a rating scale.
+- Every valid submission appends an audit entry, including repeated submissions; prior entries and stored runs remain unchanged. Feedback does not assign employees, alter live matching, or trigger retraining.
+- Database failure returns `503 DATABASE_UNAVAILABLE`, with failed writes rolled back.
