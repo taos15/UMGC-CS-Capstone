@@ -203,3 +203,12 @@ The server supplies the caller ID, run ID, and creation time. Invalid selections
 return `409 FEEDBACK_CONFLICT`; invalid field combinations return 422.
 Repeated valid submissions append separate entries. Feedback never assigns staff,
 changes historical rankings, or updates the live matching model.
+
+Recommendation failures return typed problem responses: `409 JOB_NOT_OPEN`,
+`422 JOB_HAS_NO_CRITERIA` / `VALIDATION_ERROR`, and
+`503 DATABASE_UNAVAILABLE` / `MATCH_ENGINE_UNAVAILABLE`. Eligibility, scoring,
+ranking, and explanation failures occur before persistence. Run metadata and
+candidate evidence are flushed and committed as one transaction; failed writes
+roll back both. Persistence returns the saved snapshot without a fallible
+post-commit refresh. Failure-mode tests inject errors before/after candidate
+insertion and before commit, then check that no partial run remains.

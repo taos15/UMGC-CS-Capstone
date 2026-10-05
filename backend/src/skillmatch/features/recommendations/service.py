@@ -9,6 +9,7 @@ import hashlib
 import json
 from datetime import date
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session
 
 from skillmatch.core.errors import ProblemError
@@ -94,63 +95,64 @@ def generate_recommendations(
 
     job_input = _job_scoring_input(job)
 
-    active_employees = [
-        employee
-        for employee in get_employees(candidate_employee_ids)
-        if employee.status == "ACTIVE"
-    ]
-
-    as_of = date.today()
-    ranking_inputs: list[CandidateRankingInput] = []
-    employees_by_id: dict[str, Employee] = {}
-    for employee in active_employees:
-        eligibility = evaluate_eligibility(_eligibility_input(employee), job_input, as_of=as_of)
-        proficiencies = {
-            evidence.skill_id: evidence.proficiency for evidence in employee.skill_evidence
-        }
-        scoring_input = EmployeeScoringInput(
-            skills=tuple(
-                SkillProficiency(skill_id=skill_id, proficiency=proficiency)
-                for skill_id, proficiency in proficiencies.items()
-            ),
-            valid_certification_codes=eligibility.valid_certification_codes,
-            total_years_experience=employee.years_experience,
-        )
-        scoring = score_candidate(scoring_input, job_input)
-        ranking_inputs.append(
-            CandidateRankingInput(employee_id=employee.id, scoring=scoring, eligibility=eligibility)
-        )
-        employees_by_id[employee.id] = employee
+    try:
+        active_employees = [
+            employee
+            for employee in get_employees(candidate_employee_ids)
+            if employee.status == "ACTIVE"
+        ]
+    except SQLAlchemyError:
+        raise ProblemError(503, 'DATABASE_UNAVAILABLE', 'Recommendations are temporarily unavailable.') from None
 
     try:
+        as_of = date.today()
+        ranking_inputs: list[CandidateRankingInput] = []
+        employees_by_id: dict[str, Employee] = {}
+        for employee in active_employees:
+            eligibility = evaluate_eligibility(_eligibility_input(employee), job_input, as_of=as_of)
+            proficiencies = {
+                evidence.skill_id: evidence.proficiency for evidence in employee.skill_evidence
+            }
+            scoring_input = EmployeeScoringInput(
+                skills=tuple(
+                    SkillProficiency(skill_id=skill_id, proficiency=proficiency)
+                    for skill_id, proficiency in proficiencies.items()
+                ),
+                valid_certification_codes=eligibility.valid_certification_codes,
+                total_years_experience=employee.years_experience,
+            )
+            scoring = score_candidate(scoring_input, job_input)
+            ranking_inputs.append(
+                CandidateRankingInput(employee_id=employee.id, scoring=scoring, eligibility=eligibility)
+            )
+            employees_by_id[employee.id] = employee
+
         ranked = rank_candidates(
             tuple(ranking_inputs),
             minimum_score=minimum_score,
             max_results=top_k,
             include_ineligible=include_ineligible,
         )
-    except ValueError as error:
-        raise ProblemError(
-            503, "MATCH_ENGINE_UNAVAILABLE", "Matching is temporarily unavailable."
-        ) from error
 
-    results = [
-        build_candidate_result(
-            employee_id=item.employee_id,
-            employee_name=employees_by_id[item.employee_id].name,
-            job_title=job.title,
-            proficiencies={
-                evidence.skill_id: evidence.proficiency
-                for evidence in employees_by_id[item.employee_id].skill_evidence
-            },
-            job=job_input,
-            scoring=item.scoring,
-            eligibility=item.eligibility,
-            rank=item.rank,
-            include_missing_skills=include_missing_skills,
-        )
-        for item in ranked
-    ]
+        results = [
+            build_candidate_result(
+                employee_id=item.employee_id,
+                employee_name=employees_by_id[item.employee_id].name,
+                job_title=job.title,
+                proficiencies={
+                    evidence.skill_id: evidence.proficiency
+                    for evidence in employees_by_id[item.employee_id].skill_evidence
+                },
+                job=job_input,
+                scoring=item.scoring,
+                eligibility=item.eligibility,
+                rank=item.rank,
+                include_missing_skills=include_missing_skills,
+            )
+            for item in ranked
+        ]
+    except Exception:
+        raise ProblemError(503, 'MATCH_ENGINE_UNAVAILABLE', 'Matching is temporarily unavailable.') from None
 
     options = {
         "topK": top_k,
@@ -173,6 +175,7 @@ def generate_recommendations(
             results=[result.model_dump() for result in results],
         )
     except Exception as error:
+        session.rollback()
         raise ProblemError(
             503, "DATABASE_UNAVAILABLE", "Recommendations are temporarily unavailable."
         ) from error
