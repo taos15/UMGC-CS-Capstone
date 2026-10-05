@@ -20,7 +20,7 @@ MATRIX = [
     ('GET', '/api/v1/jobs/job-electrician', ROLES, 200),
     ('PUT', '/api/v1/jobs/job-electrician', ('ADMIN',), 501),
     ('POST', '/api/v1/jobs/job-electrician/recommendations', ('ADMIN', 'SUPERVISOR'), 200),
-    ('GET', '/api/v1/match-runs/run', ROLES, 501),
+    ('GET', '/api/v1/match-runs/run', ROLES, 404),
     ('POST', '/api/v1/match-runs/run/feedback', ('ADMIN', 'SUPERVISOR'), 501),
 ]
 
