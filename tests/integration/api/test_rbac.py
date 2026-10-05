@@ -74,7 +74,7 @@ def test_forbidden_recommendation_never_accesses_job_or_candidates(role_client, 
     def protected_call(*args, **kwargs):
         pytest.fail('Protected data was accessed before authorization')
     monkeypatch.setattr('skillmatch.features.recommendations.router.get_job', protected_call)
-    monkeypatch.setattr('skillmatch.features.recommendations.router.recommend_employees', protected_call)
+    monkeypatch.setattr('skillmatch.features.recommendations.router.generate_recommendations', protected_call)
     for job_id in ('job-electrician', 'missing'):
         response = client.post(f'/api/v1/jobs/{job_id}/recommendations', json={})
         assert response.status_code == 403

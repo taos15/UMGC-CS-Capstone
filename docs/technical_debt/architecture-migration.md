@@ -7,15 +7,21 @@
 - `data/sample/employees.json` preserves the existing two-employee example.
   Runtime seed data additionally contains Sam Rivera. JSON examples are not
   runtime inputs; a validated import story should reconcile that dataset explicitly.
-- DB-002 added `features/recommendations/{models.py,repository.py}` (MatchRun,
-  CandidateResult) and `features/feedback/{models.py,repository.py}` (Feedback),
-  covering the persistence boundary only. No router/service calls these
-  repositories yet - wiring a live recommendation request to actually persist
-  a match run, and exposing `GET /api/v1/match-runs/{id}` and the feedback
-  endpoint, remain separate stories (REC-002, FDBK-001).
-- Auth, skills taxonomy, CSV import, offline evaluation, and React
-  implementation still require their own stories. No empty feature modules
-  were added during the architecture migration or DB-002.
+- REC-001 wired `features/recommendations/service.py` to the canonical
+  eligibility/scoring engine (`features/matching/{canonical_scoring,eligibility}.py`)
+  and to the DB-002 repositories: every successful recommendation request now
+  snapshots `ACTIVE` candidates, scores/ranks them, and persists the match run
+  before responding. `GET /api/v1/match-runs/{match_run_id}` itself remains a
+  `501` stub (REC-002) - only the repository-level `get_match_run` is wired so
+  far. The feedback endpoint (FDBK-001) is implemented separately; it is not
+  part of this story.
+- `Employee`/`Job` gained a `status` field and structured scoring evidence
+  (`skill_evidence`/`certification_evidence`/`skill_requirement_details`) as
+  part of REC-001, additive to the existing flat fields so prior employee/job
+  read/write behavior is unchanged. See the "Approved recommendation-
+  orchestration amendment" in `resources/spec_bundle/api/api_contract.md`.
+- CSV import, offline evaluation, and the full React implementation still
+  require their own stories.
 - The baseline dependency warnings (Starlette/AnyIO portal deprecation and
   Pydantic request-field alias warnings) remain reproducible. Existing request
   behavior and OpenAPI are covered; dependency/schema remediation is separate.

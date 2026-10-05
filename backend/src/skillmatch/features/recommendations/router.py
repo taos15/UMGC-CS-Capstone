@@ -1,46 +1,73 @@
-from uuid import uuid4
+from typing import Annotated
 
-from skillmatch.features.matching.scoring import MODEL_VERSION
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session
 
-from fastapi import APIRouter, HTTPException
-
-from skillmatch.features.auth.dependencies import READ_ROLES, SUPERVISOR_ROLES, role_access
-
+from skillmatch.core.errors import ProblemError
+from skillmatch.db.session import get_db
+from skillmatch.features.auth.dependencies import (
+    READ_ROLES,
+    SUPERVISOR_ROLES,
+    get_authenticated_user,
+    role_access,
+)
+from skillmatch.features.auth.schemas import AuthenticatedUser
 from skillmatch.features.jobs.repository import get_job
 from skillmatch.features.recommendations.schemas import (
     RecommendationRequest,
     RecommendationResponse,
 )
-from skillmatch.features.recommendations.service import recommend_employees
+from skillmatch.features.recommendations.service import generate_recommendations
 
 
 router = APIRouter()
+
+PROBLEM_RESPONSES = {
+    404: {"description": "Job not found", "content": {"application/problem+json": {
+        "schema": {"$ref": "#/components/schemas/ProblemDetails"}}}},
+    409: {"description": "Job is not open", "content": {"application/problem+json": {
+        "schema": {"$ref": "#/components/schemas/ProblemDetails"}}}},
+    422: {"description": "Job has no usable criteria", "content": {"application/problem+json": {
+        "schema": {"$ref": "#/components/schemas/ProblemDetails"}}}},
+    503: {"description": "Matching or persistence unavailable", "content": {"application/problem+json": {
+        "schema": {"$ref": "#/components/schemas/ProblemDetails"}}}},
+}
 
 
 @router.post(
     "/api/v1/jobs/{job_id}/recommendations",
     response_model=RecommendationResponse,
+    responses=PROBLEM_RESPONSES,
     **role_access(*SUPERVISOR_ROLES),
     description="Allowed roles: ADMIN, SUPERVISOR. Supervisor retains final staffing authority.",
 )
 def create_recommendations(
-    job_id: str, request: RecommendationRequest
+    job_id: str,
+    request: RecommendationRequest,
+    session: Annotated[Session, Depends(get_db)],
+    user: Annotated[AuthenticatedUser, Depends(get_authenticated_user)],
 ) -> RecommendationResponse:
     job = get_job(job_id)
     if job is None:
-        raise HTTPException(status_code=404, detail="Job not found")
+        raise ProblemError(404, "JOB_NOT_FOUND", "Job not found.")
+
+    match_run_id, model_version, recommendations = generate_recommendations(
+        session,
+        job,
+        requested_by=str(user.user_id),
+        candidate_employee_ids=request.candidate_employee_ids,
+        top_k=request.top_k,
+        minimum_score=request.minimum_score,
+        include_missing_skills=request.include_missing_skills,
+        include_ineligible=request.include_ineligible,
+    )
     return RecommendationResponse(
         jobId=job.id,
-        match_run_id=str(uuid4()),
-        model_version=MODEL_VERSION,
-        recommendations=recommend_employees(
-            job,
-            request.candidate_employee_ids,
-            request.top_k,
-            request.minimum_score,
-            request.include_missing_skills,
-        ),
+        match_run_id=match_run_id,
+        model_version=model_version,
+        recommendations=recommendations,
     )
+
 
 UNIMPLEMENTED = {501: {'description': 'Endpoint is not implemented yet.',
     'content': {'application/problem+json': {'schema': {'$ref': '#/components/schemas/ProblemDetails'}}}}}
