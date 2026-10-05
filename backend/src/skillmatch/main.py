@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
@@ -10,7 +12,7 @@ from skillmatch.core.errors import (
 from skillmatch.features.auth.dependencies import get_authenticated_user
 from sqlalchemy import text
 
-from skillmatch.db.session import engine
+from skillmatch.db.session import engine, init_db
 from skillmatch.features.auth.router import router as auth_router
 from skillmatch.features.skills.router import router as skills_router
 from skillmatch.features.feedback.router import router as feedback_router
@@ -19,10 +21,17 @@ from skillmatch.features.jobs.router import router as jobs_router
 from skillmatch.features.recommendations.router import router as recommendations_router
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
 app = FastAPI(
     title="SkillMatch AI",
     version="0.1.0",
     description="Human-reviewed workforce matching recommendations.",
+    lifespan=lifespan,
     responses={status: {"description": "Problem response",
                         "content": {"application/problem+json": {
                             "schema": {"$ref": "#/components/schemas/ProblemDetails"}}}}

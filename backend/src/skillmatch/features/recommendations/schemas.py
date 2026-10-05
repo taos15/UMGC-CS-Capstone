@@ -3,7 +3,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from skillmatch.features.matching.schemas import CandidateResult, Recommendation
+from skillmatch.features.matching.schemas import CandidateResult
 
 
 class RecommendationRequest(BaseModel):
@@ -15,6 +15,7 @@ class RecommendationRequest(BaseModel):
     minimum_score: Annotated[float, Field(default=0.0, ge=0, le=100)] = Field(
         alias="minimumScore"
     )
+    include_ineligible: bool = Field(default=False, alias="includeIneligible")
 
     model_config = {"populate_by_name": True}
 
@@ -23,7 +24,7 @@ class RecommendationResponse(BaseModel):
     match_run_id: str
     model_version: str
     job_id: str = Field(alias="jobId")
-    recommendations: list[Recommendation]
+    recommendations: list[CandidateResult]
 
     model_config = {"populate_by_name": True}
 

@@ -84,3 +84,31 @@ def test_get_match_run_returns_immutable_stored_run() -> None:
 def test_get_match_run_returns_none_when_missing() -> None:
     with _session() as session:
         assert get_match_run(session, "does-not-exist") is None
+
+
+def test_snapshot_serializes_legacy_options_without_mutating_persistence() -> None:
+    from skillmatch.features.recommendations.repository import build_match_run_snapshot
+    with _session() as session:
+        options = {'topK': 4, 'minimumScore': 20, 'includeIneligible': True, 'includeMissingSkills': False}
+        created = create_match_run(
+            session, job_id='historical-job', requested_by='user', model_version='historical-model',
+            snapshot_hash='stored-hash', options=options, results=[],
+        )
+        snapshot = build_match_run_snapshot(session, created)
+        assert snapshot.options.model_dump() == {
+            'max_results': 4, 'minimum_score': 20, 'include_ineligible': True,
+        }
+        assert snapshot.results == []
+        assert snapshot.generated_at.utcoffset().total_seconds() == 0
+        assert created.options == options
+
+
+def test_snapshot_accepts_canonical_options() -> None:
+    from skillmatch.features.recommendations.repository import build_match_run_snapshot
+    with _session() as session:
+        options = {'max_results': 4, 'minimum_score': 20, 'include_ineligible': False}
+        created = create_match_run(
+            session, job_id='historical-job', requested_by='user', model_version='historical-model',
+            snapshot_hash='stored-hash', options=options, results=[],
+        )
+        assert build_match_run_snapshot(session, created).options.model_dump() == options

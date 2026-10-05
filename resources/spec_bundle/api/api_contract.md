@@ -81,3 +81,42 @@ Approved by the user in this implementation session (permanent deletion replaces
 - Stored match-run snapshots and feedback remain immutable historical records. Deletion does not recompute or remove them.
 - The portal requires explicit permanent-deletion confirmation. A stale DELETE retains the draft and requires an explicit reload; it never retries with a guessed version.
 - Backend persistence and DELETE routes must implement this contract before live deletion is available.
+
+## Approved recommendation-orchestration amendment (REC-001)
+
+Approved in this implementation session:
+
+- `POST /jobs/{job_id}/recommendations` now runs the canonical eligibility/scoring
+  engine (`55/20/15/10`, `resources/spec_bundle/matching/matching_contract.md`)
+  instead of the earlier ad hoc weights, and persists every successful run via
+  `features/recommendations/repository.py` before responding.
+- `recommendations` in the response is now a list of the data contract's
+  `CandidateResult` shape (`rank`, `employee_id`, `score`, `eligible`,
+  `component_scores`, `matched_skills`, `missing_skills`,
+  `matched_certifications`, `missing_certifications`, `ineligible_reasons`,
+  `explanation`) in `snake_case`, replacing the legacy camelCase `Recommendation`/
+  `scoreBreakdown` shape. `component_scores` values are the unrounded 0.0-1.0
+  internal components, per matching_contract.md.
+- The request gains `include_ineligible` (alias `includeIneligible`, default
+  `false`), matching `RecommendationOptions` in the data contract. The request's
+  other fields keep their existing camelCase aliases for now - only the
+  response changed in this amendment.
+- `Employee` and `Job` gain a `status` field (`ACTIVE`/`INACTIVE`,
+  `OPEN`/`CLOSED`) and structured scoring evidence (`skill_evidence`,
+  `certification_evidence` on Employee; `skill_requirement_details` on Job),
+  additive to their existing flat `skills`/`required_skills`/etc. fields so
+  existing employee/job read/write behavior is unchanged.
+- A job that is not `OPEN` returns `409 JOB_NOT_OPEN`; a job with no usable
+  skill/certification/experience criteria returns `422 JOB_HAS_NO_CRITERIA`.
+  The orchestrator snapshots `ACTIVE` candidates only - `INACTIVE` employees
+  are excluded before scoring, not merely marked ineligible.
+- `GET /match-runs/{match_run_id}` returns the persisted snapshot (REC-002).
+
+## Approved match-run retrieval scope (REC-002)
+
+Approved by the user in this implementation session:
+
+- ADMIN can read all stored runs. SUPERVISOR and VIEWER can read only runs whose `requested_by` equals their authenticated user ID.
+- Unknown IDs return `404 MATCH_RUN_NOT_FOUND`. Out-of-scope runs return generic `403 FORBIDDEN`, without rankings, evidence, or requester details.
+- GET returns the canonical `MatchRun` shape, with snake_case options and results, UTC `generated_at`, and stored rank ordering. Historical camelCase option keys are normalized without modifying stored rows.
+- Retrieval never reads live employee/job profiles or invokes matching. Database failures return `503 DATABASE_UNAVAILABLE`.
