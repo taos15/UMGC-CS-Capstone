@@ -124,3 +124,34 @@ test('updated non-OPEN detail prevents recommendation requests', async () => {
   expect(await screen.findByText('Recommendations are available for OPEN jobs.')).toBeVisible();
   expect(screen.queryByRole('button', { name: 'Request recommendations' })).not.toBeInTheDocument();
 });
+
+test('feedback targets the returned run and a new recommendation clears the previous draft', async () => {
+  let runNumber = 0;
+  fetch.mockImplementation(async (path, options) => {
+    if (path.endsWith('/feedback')) return reply({decision: 'SELECTED'}, 201);
+    if (path.endsWith('/recommendations')) return reply({
+      match_run_id: `stored-run-${++runNumber}`, model_version: 'rules-v1', recommendations: [{
+        rank: 1, employee_id: 'eligible-employee', eligible: true, score: 90, explanation: 'Server explanation.',
+      }],
+    });
+    return reply(path === '/api/v1/jobs' ? jobs : jobs[0]);
+  });
+  render(<JobListPage onLogout={vi.fn()} />);
+  await userEvent.click(await screen.findByRole('button', {name: /Commercial Electrician/}));
+  await userEvent.click(await screen.findByRole('button', {name: 'Request recommendations'}));
+  await userEvent.selectOptions(await screen.findByLabelText('Decision'), 'SELECTED');
+  await userEvent.selectOptions(screen.getByLabelText('Selected employee'), 'eligible-employee');
+  await userEvent.type(screen.getByLabelText('Comment (optional)'), 'Reviewed first run');
+  await userEvent.click(screen.getByRole('button', {name: 'Record feedback'}));
+  expect(await screen.findByText(/Feedback recorded/)).toBeVisible();
+  const request = fetch.mock.calls.find(([path]) => path.endsWith('/feedback'));
+  expect(request[0]).toBe('/api/v1/match-runs/stored-run-1/feedback');
+  expect(JSON.parse(request[1].body)).toEqual({decision: 'SELECTED', selected_employee_id: 'eligible-employee', comment: 'Reviewed first run'});
+  await userEvent.click(screen.getByRole('button', {name: 'Request recommendations'}));
+  await waitFor(() => expect(screen.getByLabelText('Decision')).toHaveValue(''));
+  expect(screen.getByLabelText('Comment (optional)')).toHaveValue('');
+  await userEvent.selectOptions(screen.getByLabelText('Decision'), 'DEFERRED');
+  await userEvent.click(screen.getByRole('button', {name: 'Record feedback'}));
+  await screen.findByText(/Feedback recorded/);
+  expect(fetch.mock.calls.filter(([path]) => path.endsWith('/feedback'))[1][0]).toBe('/api/v1/match-runs/stored-run-2/feedback');
+});
