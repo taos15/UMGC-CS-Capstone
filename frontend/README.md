@@ -1,6 +1,8 @@
-# SkillMatch profile portal
+# SkillMatch portal
 
 Requires Node.js 24 or later. From this directory, run `npm ci`, then `npm run dev`. Vite proxies `/api` to the local backend at `http://127.0.0.1:8000`. Run `npm test` and `npm run build` for validation.
+
+After login, the portal opens the job recommendations page. Workspace navigation also opens employee and job profile management. Both flows share the same session and API client; the session expires automatically.
 
 Employee and job forms use the canonical snake_case profile contracts, including skills and certifications. Updates send the exact version from the last successful GET/PUT. A `409 STALE_VERSION` keeps the draft, blocks further changes on the server, and offers a confirmed reload. Profiles without server versions cannot be edited or deleted.
 

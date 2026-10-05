@@ -2,7 +2,8 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, afterEach, expect, test, vi } from 'vitest';
-import App from './App';
+import App from '../App';
+import CanonicalApp from './App';
 import { clearSession, setSession } from '../features/auth/session';
 import { apiRequest } from '../api/client';
 
@@ -113,4 +114,30 @@ test('a late 401 from an old token does not clear a newer session', async () => 
   complete(reply({ code: 'AUTH_REQUIRED' }, 401));
   await expect(request).rejects.toMatchObject({ status: 401 });
   expect(sessionStorage.getItem('skillmatch.session')).toContain('new-token');
+});
+
+test('browser entry point and compatibility import use the same application', async () => {
+  expect(App).toBe(CanonicalApp);
+  const main = await import('./../main.jsx?raw');
+  expect(main.default).toContain("import App from './app/App'");
+});
+
+test('authenticated workspace connects recommendations and both CRUD forms', async () => {
+  setSession({ access_token: 'test-token', token_type: 'bearer', expires_in: 900 });
+  fetch.mockResolvedValue(reply([]));
+  render(<App />);
+  expect(await screen.findByRole('heading', {name: 'Jobs'})).toBeVisible();
+  await userEvent.click(screen.getByRole('button', {name: 'Employee profiles'}));
+  expect(await screen.findByRole('heading', {name: 'Employees'})).toBeVisible();
+  await userEvent.click(screen.getByRole('button', {name: 'Create profile'}));
+  expect(screen.getByRole('heading', {name: 'Create employee profile'})).toBeVisible();
+  expect(screen.getByLabelText('Employee number')).toBeVisible();
+  await userEvent.click(screen.getByRole('button', {name: 'Job profiles'}));
+  expect(await screen.findByRole('heading', {name: 'Jobs'})).toBeVisible();
+  await userEvent.click(screen.getByRole('button', {name: 'Create profile'}));
+  expect(screen.getByLabelText('Job code')).toBeVisible();
+  await userEvent.click(screen.getByRole('button', {name: 'Job recommendations'}));
+  expect(await screen.findByLabelText('Job status')).toHaveValue('OPEN');
+  await userEvent.click(screen.getByRole('button', {name: 'Sign out'}));
+  expect(screen.getByLabelText('Password')).toHaveValue('');
 });
