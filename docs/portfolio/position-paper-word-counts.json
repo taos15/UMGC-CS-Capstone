@@ -1,0 +1,9 @@
+{
+  "method": "Whitespace-separated prose tokens including in-text citations; excludes title, author, section headings, formatting, and references.",
+  "sections": {
+    "System Delivery and Integration": 400,
+    "Methodology and Performance Evaluation": 450,
+    "Professional Development Roadmap": 450
+  },
+  "total_body_words": 1300
+}

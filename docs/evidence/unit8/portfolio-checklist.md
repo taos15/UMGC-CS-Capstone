@@ -48,6 +48,10 @@ after repository evidence is collected, so its claims match the demonstrated bui
 
 ## Part 3: individual position paper
 
+An [editable paper](../../portfolio/position-paper.md) and
+[PDF](../../portfolio/James_Lambert_Position_Paper.pdf) are prepared with verified
+400/450/450-word body sections. Personal review and final evidence updates remain.
+
 Deliver a PDF with a 1,300-word paper body:
 
 | Section | Words | Evidence and argument |

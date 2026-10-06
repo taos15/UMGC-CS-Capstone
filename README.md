@@ -127,3 +127,7 @@ and error-recovery workflows.
 
 Unit 8 presentation preparation: [stakeholder video script](docs/portfolio/stakeholder-video-script.md)
 and [recording checklist](docs/portfolio/recording-checklist.md).
+
+Unit 8 individual paper: [editable draft](docs/portfolio/position-paper.md),
+[PDF](docs/portfolio/James_Lambert_Position_Paper.pdf), and
+[verification notes](docs/portfolio/position-paper-notes.md).
