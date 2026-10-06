@@ -10,12 +10,15 @@ dependencies = [
     "PyJWT==2.14.0",
     "sqlalchemy==2.0.36",
     "sqlmodel==0.0.47",
+    "psycopg[binary]>=3.3.6",
+    "alembic>=1.20.0",
 ]
 
 [dependency-groups]
 dev = [
     "pytest==8.3.4",
     "httpx==0.28.1",
+    "ruff==0.15.6",
 ]
 
 [build-system]
@@ -25,3 +28,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["backend/src"]
 include = ["skillmatch*"]
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

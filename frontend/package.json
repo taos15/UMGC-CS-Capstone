@@ -10,18 +10,25 @@
     "dev": "vite",
     "build": "vite build",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "vite": "^8.3.2",
-    "vitest": "^4.1.11",
-    "jsdom": "^27.0.1",
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.63.0",
+    "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
-    "@testing-library/jest-dom": "^7.0.1"
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^17.13.0",
+    "jsdom": "^27.0.1",
+    "vite": "^8.3.2",
+    "vitest": "^4.1.11"
   }
 }

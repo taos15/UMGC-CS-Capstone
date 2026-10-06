@@ -58,33 +58,29 @@ def test_employee_and_job_reads_preserve_seed_data(client) -> None:
     assert [employee["id"] for employee in employees] == ["emp-alex", "emp-jordan", "emp-sam"]
     assert all(employee["status"] == "ACTIVE" for employee in employees)
     assert client.get("/api/v1/employees/emp-alex").json() == employees[0]
-    assert client.get("/api/v1/jobs/job-hvac").json() == {
-        "id": "job-hvac",
-        "title": "HVAC Technician",
-        "required_skills": ["hvac repair", "troubleshooting"],
-        "preferred_skills": [],
-        "required_certifications": ["epa 608"],
-        "minimum_years_experience": 3.0,
-        "status": "OPEN",
-        "skill_requirement_details": [
-            {"skill_id": "hvac repair", "level": "REQUIRED",
-             "minimum_proficiency": 3, "importance": 3},
-            {"skill_id": "troubleshooting", "level": "REQUIRED",
-             "minimum_proficiency": 3, "importance": 2},
-        ],
-    }
+    from skillmatch.features.jobs.schemas import JobProfile
+    job = JobProfile.model_validate(client.get('/api/v1/jobs/job-hvac').json())
+    assert job.title == 'HVAC Technician'
+    assert job.certification_requirements == ['epa 608']
+    assert [item.skill_id for item in job.skill_requirements] == ['hvac repair', 'troubleshooting']
+    assert [item.minimum_proficiency for item in job.skill_requirements] == [3, 3]
+    assert [item.importance for item in job.skill_requirements] == [3, 2]
+    assert job.status == 'OPEN'
+    assert job.minimum_years_experience == 3
+    assert job.version == 1
+
 
 
 @pytest.mark.parametrize("path,detail", [
-    ("/api/v1/employees/missing", "Employee not found"),
-    ("/api/v1/jobs/missing", "Job not found"),
+    ("/api/v1/employees/missing", "Employee not found."),
+    ("/api/v1/jobs/missing", "Job not found."),
 ])
 def test_missing_resources(path: str, detail: str, client) -> None:
     response = client.get(path)
     assert response.status_code == 404
     assert response.json() == {
         "type": "about:blank", "title": "Not Found", "status": 404,
-        "code": "NOT_FOUND", "request_id": response.headers["X-Request-ID"],
+        "code": "EMPLOYEE_NOT_FOUND" if "employees" in path else "JOB_NOT_FOUND", "request_id": response.headers["X-Request-ID"],
         "detail": detail, "field_errors": [],
     }
 

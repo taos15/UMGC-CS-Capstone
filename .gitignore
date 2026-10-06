@@ -17,3 +17,7 @@ node_modules/
 
 .env.local
 .env.*.local
+
+.ruff_cache/
+frontend/test-results/
+frontend/playwright-report/

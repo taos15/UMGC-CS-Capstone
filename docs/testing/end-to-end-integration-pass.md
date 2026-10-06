@@ -1,3 +1,6 @@
+> Historical check on checkout ea7cab5. Its blockers are superseded by the
+> PostgreSQL/browser readiness evidence in [the current submission checklist](../evidence/unit5/submission-readiness.md).
+
 # Integration check: full path blocked
 
 Checked checkout `ea7cab5` with the requested scope: no new product features; fix existing breakage only.

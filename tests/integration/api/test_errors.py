@@ -8,7 +8,7 @@ from skillmatch.main import app
 
 
 @pytest.mark.parametrize('method,path,payload,status,code', [
-    ('get', '/api/v1/employees/missing', None, 404, 'NOT_FOUND'),
+    ('get', '/api/v1/employees/missing', None, 404, 'EMPLOYEE_NOT_FOUND'),
     ('get', '/unknown', None, 404, 'NOT_FOUND'),
     ('post', '/health', None, 405, 'METHOD_NOT_ALLOWED'),
     ('post', '/api/v1/jobs/job-electrician/recommendations', {'topK': 0}, 422, 'VALIDATION_ERROR'),
@@ -46,7 +46,7 @@ def test_invalid_request_id_is_replaced(client):
 
 
 def test_unexpected_error_is_generic_and_correlated(monkeypatch, client):
-    def fail():
+    def fail(*args, **kwargs):
         raise RuntimeError('private database password')
     monkeypatch.setattr('skillmatch.features.employees.router.get_employees', fail)
     response = TestClient(app, raise_server_exceptions=False).get('/api/v1/employees', headers={'X-Request-ID': 'failure-123', 'Authorization': client.headers['Authorization']})

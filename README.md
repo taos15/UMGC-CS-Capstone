@@ -1,225 +1,118 @@
 # SkillMatch AI
 
-SkillMatch AI is an alpha workforce-matching prototype that recommends employees for jobs based on skills, certifications, and experience rather than job title alone. Recommendation results are decision support only: a supervisor remains the final decision-maker.
+SkillMatch AI recommends employees using structured skills, valid certifications,
+and experience. Recommendations support human decisions; feedback never assigns
+employees or retrains the live model. This project is being completed individually.
 
-## Features
+## Setup
 
-- Employee and job retrieval
-- Ranked employee recommendations with transparent weighted scores
-- Explainable score breakdowns for required skills, preferred skills, certifications, and experience
-- Matched skills and certifications plus missing requirements
-- FastAPI endpoint and interactive OpenAPI documentation
-- Automated matching and API tests with GitHub Actions CI
-
-## Project Structure
-
-```text
-backend/src/skillmatch/
-  main.py        Canonical FastAPI application and health endpoints
-  core/          Cross-cutting configuration, problem responses, and request-ID middleware
-  db/            Shared SQLModel base, engine, and sessions
-  features/      Employees, jobs, recommendations, and pure matching
-tests/           Unit, API/database integration, and architecture contract tests
-data/sample/     JSON examples of alpha seed data
-docs/            Architecture, technical debt, workflow, and review guidance
-```
-
-## Run Locally
-
-Requires [uv](https://docs.astral.sh/uv/getting-started/installation/). Python itself doesn't
-need to be installed separately - `uv sync` downloads the version pinned in `.python-version`
-(3.12) and creates `.venv` automatically.
-
-```powershell
-uv sync
-uv run uvicorn skillmatch.main:app --reload
-```
-
-Open `http://127.0.0.1:8000/docs` for the API documentation.
-
-Root `pyproject.toml` installs `skillmatch` from `backend/src/` during `uv sync`.
-Each implemented feature owns its HTTP/schema/data-access responsibilities.
-Recommendation orchestration retrieves candidates and passes immutable DTOs to
-matching, which has no HTTP or database dependencies.
-
-See [architecture](docs/architecture/ARCH-001.md) and
-[remaining technical debt](docs/technical_debt/architecture-migration.md).
-
-## Example
-
-Send a `POST` request to `/api/v1/jobs/job-electrician/recommendations`:
-
-```json
-{
-  "candidateEmployeeIds": null,
-  "topK": 5,
-  "includeMissingSkills": true,
-  "minimumScore": 0.0
-}
-```
-
-Run the tests with:
-
-```powershell
-uv run pytest -q
-```
-
-## Errors and request correlation
-
-Every HTTP response includes `X-Request-ID`. An incoming value containing
-1–128 ASCII letters, digits, dots, underscores, or hyphens is echoed; absent
-or invalid values are replaced with a UUID. Error bodies carry the same ID.
-
-HTTP errors, invalid requests, and unexpected application failures use
-`application/problem+json` following [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html):
-
-```json
-{
-  "type": "about:blank",
-  "title": "Unprocessable Entity",
-  "status": 422,
-  "code": "VALIDATION_ERROR",
-  "request_id": "trace-123",
-  "detail": "Request validation failed.",
-  "field_errors": [
-    {"field": "body.topK", "code": "greater_than_equal", "message": "Input should be greater than or equal to 1"}
-  ]
-}
-```
-
-`field_errors` is empty for non-validation errors. Field paths include their
-request location and use dots between nested segments. HTTP status codes and
-headers such as `Allow` and `WWW-Authenticate` are preserved. Unexpected
-failures return a generic `INTERNAL_ERROR`; exceptions are logged with the
-request ID. Failures after streaming headers have been sent cannot replace
-an already-started response.
-
-Recommendation responses also include snake_case `match_run_id` (a fresh UUID
-for each generation) and `model_version` (`rules-v1`, identifying the existing
-50/10/25/15 scoring rules). Run IDs identify generated responses; runs are not
-persisted by this implementation. Existing recommendation fields retain their
-current names and behavior.
-
-## REST endpoint stubs and role annotations
-
-All section 5 routes are registered under `/api/v1`, including
-`GET /api/v1/health`. The original `/health` remains available for compatibility.
-The listed routes represent 15 method/path operations.
-
-OpenAPI descriptions and `x-allowed-roles` record the intended role policy:
-read operations allow ADMIN, SUPERVISOR, and VIEWER; profile and skill writes
-allow ADMIN; recommendations and feedback allow ADMIN and SUPERVISOR.
-Match-run retrieval additionally requires authorized run scope. Login is public.
-The health role policy is unspecified (`x-role-policy: unspecified`).
-
-Workforce routes require a valid bearer token and enforce the documented
-ADMIN/SUPERVISOR/VIEWER permissions in the backend. Existing employee retrieval, job
-retrieval, recommendations, and health behavior remain functional. The remaining feature stubs
-return HTTP 501 after authentication with `{"detail": "Not implemented"}`. Request/response
-contracts for these placeholders will be connected during feature implementation.
-
-## Local login
-
-Configure `SKILLMATCH_JWT_SECRET` with a random secret of at least 32 bytes and
-`SKILLMATCH_LOCAL_USERS` with a JSON object containing your local accounts:
-
-```json
-{
-  "your-username": {
-    "user_id": "<user UUID>",
-    "role": "SUPERVISOR",
-    "password_hash": "<salted scrypt hash>"
-  }
-}
-```
-
-Roles are ADMIN, SUPERVISOR, or VIEWER. There are no built-in accounts or
-fallback signing keys. Supply these values through your local environment;
-keep secrets and account configuration out of source control. Generate a
-password hash interactively without placing the password in command history:
+Prerequisites: uv, Node.js 24 or newer, and PostgreSQL (the verified local server
+was 14.24; CI uses 16). Root `pyproject.toml`, `.python-version`, and `uv.lock` are
+the Python dependency source of truth. The canonical package is in
+`backend/src/skillmatch/`; React is in `frontend/`.
 
 ```sh
-uv run python -c 'from getpass import getpass; from skillmatch.core.security import hash_password; print(hash_password(getpass("Password: ")))'
+uv sync --locked
+npm --prefix frontend ci
 ```
 
-Login with JSON `{"username": "your-username", "password": "your-password"}` at
-`POST /api/v1/auth/login`. Success returns `access_token`, `token_type: "bearer"`,
-and `expires_in: 900`. Subsequent workforce requests use
-`Authorization: Bearer <access_token>`. Tokens expire after 15 minutes; login
-again to obtain a new token. Login responses use `Cache-Control: no-store`.
-JWT signatures and expiry are handled by [PyJWT](https://pyjwt.readthedocs.io/en/v2.14.0/usage.html)
-with a fixed HS256 algorithm.
-
-Wrong passwords and unknown usernames return identical HTTP 401
-`application/problem+json` responses with `AUTH_INVALID_CREDENTIALS` and the
-generic detail `Invalid username or password.` Missing, invalid, or expired
-bearer tokens return `AUTH_REQUIRED`. Both use `WWW-Authenticate: Bearer`.
-Error bodies and every response carry matching request IDs. Invalid auth
-configuration fails with generic HTTP 503 `AUTH_UNAVAILABLE`.
-Health endpoints remain public. Role authorization is enforced on every
-workforce route. Match-run retrieval returns stored snapshots; ADMIN may read all runs, while
-SUPERVISOR and VIEWER may read only their own runs. Scope is checked before candidate evidence is loaded.
-
-## React login portal
-
-The React app is in `frontend/` and requires Node.js 24 or newer. Start the configured backend on port 8000,
-then run:
+Set `DATABASE_URL` to your PostgreSQL connection using the psycopg driver, for
+example `postgresql+psycopg://<user>:<password>@localhost:5432/skillmatch`.
+Create the database first. Supply credentials through the environment rather
+than committing them. Run from the repository root:
 
 ```sh
-cd frontend
-npm ci
-npm run dev
+uv run --locked alembic upgrade head
+uv run --locked python scripts/seed_data.py
+uv run --locked uvicorn skillmatch.main:app --reload
 ```
 
-Open the local URL printed by Vite. Its development proxy forwards `/api`
-requests to `http://127.0.0.1:8000`; production hosting must route `/api` to the
-backend on the same origin. Build with `npm run build`, and run frontend tests
-with `npm test`. `npm run preview` serves the built assets only.
+The seed script validates 10 fictional employees, 3 OPEN jobs, and 12 skill IDs
+before writing, retains existing profiles, and never overwrites user edits.
+See [mock dataset](data/mock/README.md) for three certification types, varied
+scores, and a deterministic fixed-date preview. SQLite remains available for
+local development when `DATABASE_URL` is omitted; it uses direct table creation.
+PostgreSQL requires explicit migrations before application startup.
 
-The username/password form calls the approved login endpoint. Bearer tokens
-are held in memory and session storage for the current tab, surviving refresh
-until expiry; passwords are never stored. Logout, token expiry, or a protected
-request receiving HTTP 401 clears the session. A 403 preserves the session.
-The shared `frontend/src/api/client.js` attaches `Authorization: Bearer ...`
-to subsequent API requests. All role authorization remains on the server.
-After login, the workspace displays jobs with an OPEN filter, job details,
-and recommendation requests. Recommendations preserve server rank order and display scores, component
-values, matched/missing skills and certifications, eligibility reasons, and
-server explanations. Run ID and model version identify the returned evidence;
-the UI never recomputes scores or assigns employees. The page currently needs a
-working `GET /api/v1/jobs` response with job status; that endpoint remains a
-backend stub pending approval of its list/status contract. Recommendation
-options use the currently supported `top_k`, `minimum_score`, and
-`include_missing_skills` fields and preserve their tested defaults.
+## Local authentication
 
-## Supervisor feedback
+Set `SKILLMATCH_JWT_SECRET` to a random secret of at least 32 bytes. Set
+`SKILLMATCH_LOCAL_USERS` to a JSON object keyed by username:
 
-`POST /api/v1/match-runs/{match_run_id}/feedback` records an append-only audit
-entry and returns HTTP 201 with the saved `Feedback`. ADMIN may submit against
-any stored run; SUPERVISOR only against their own. VIEWER cannot submit.
+```json
+{"your-username":{"user_id":"<UUID>","role":"ADMIN","password_hash":"<scrypt hash>"}}
+```
 
-Example body: `{"decision":"SELECTED","selected_employee_id":"employee-id","rating":5,"comment":"Reviewed fit."}`.
-`SELECTED` requires an eligible candidate from the stored run. For `NOT_SELECTED`
-or `DEFERRED`, omit `selected_employee_id`; rating and comment are optional.
-The server supplies the caller ID, run ID, and creation time. Invalid selections
-return `409 FEEDBACK_CONFLICT`; invalid field combinations return 422.
-Repeated valid submissions append separate entries. Feedback never assigns staff,
-changes historical rankings, or updates the live matching model.
+Generate a password hash without putting the password in shell history:
 
-Recommendation failures return typed problem responses: `409 JOB_NOT_OPEN`,
-`422 JOB_HAS_NO_CRITERIA` / `VALIDATION_ERROR`, and
-`503 DATABASE_UNAVAILABLE` / `MATCH_ENGINE_UNAVAILABLE`. Eligibility, scoring,
-ranking, and explanation failures occur before persistence. Run metadata and
-candidate evidence are flushed and committed as one transaction; failed writes
-roll back both. Persistence returns the saved snapshot without a fallible
-post-commit refresh. Failure-mode tests inject errors before/after candidate
-insertion and before commit, then check that no partial run remains.
+```sh
+uv run --locked python -c 'from getpass import getpass; from skillmatch.core.security import hash_password; print(hash_password(getpass("Password: ")))'
+```
 
-## Varied mock dataset
+Use ADMIN for profile/taxonomy administration, SUPERVISOR for recommendations
+and feedback, or VIEWER for read access. There are no built-in accounts or
+fallback signing secrets. Login issues a signed 15-minute bearer token; unknown
+users and incorrect passwords receive the same generic 401 response. Tokens are
+stored in memory/session storage; passwords are never stored. Server authorization
+remains authoritative. ADMIN reads all runs; other roles read their own runs.
 
-[data/mock](data/mock/README.md) contains 10 fictional employees, 3 OPEN jobs,
-12 skill IDs, and 3 certification types in canonical profile JSON. A reproducible
-preview generated by the matching engine demonstrates high/medium/low eligible
-scores for every job, plus expired-certification and inactive-employee cases.
-Run `uv run --locked python scripts/preview_mock_dataset.py` to inspect the
-scores at the documented fixed date. Runtime seed loading remains separate.
+## Portal and API
+
+```sh
+npm --prefix frontend run dev
+```
+
+Open Vite's printed URL. The development proxy targets localhost port 8000;
+`SKILLMATCH_API_PROXY_TARGET` changes that target. `VITE_API_BASE_URL` configures
+the frontend API base, defaulting to `/api/v1`. Production hosting must route API
+traffic to FastAPI; `npm run preview` serves assets only. API documentation is at
+`http://127.0.0.1:8000/docs`.
+
+After login, select an OPEN job and request recommendations. Results show the
+server rank, score, R/P/C/E components, eligibility, matched/missing evidence,
+explanation, match-run ID, and model version `rpce-55-20-15-10-v1`. Choose SELECTED,
+NOT_SELECTED, or DEFERRED and optionally comment to append feedback to the run.
+
+Employee and job profile pages create, read, update, and permanently delete
+canonical profiles. Writes require ADMIN. PUT/DELETE include the last-read
+version; stale changes return 409 STALE_VERSION, retain the draft, and require an
+explicit reload. Deletion requires confirmation and retains historical runs
+and feedback. Employee/job lists and skill IDs support `page` and `page_size`.
+
+All responses carry `X-Request-ID`. Errors use RFC 9457 `application/problem+json`
+with stable `code`, `request_id`, `detail`, and `field_errors`. The portal renders
+safe guidance and correlation IDs. Database and matching failures return 503;
+failed matches never persist partial runs. See the
+[API contract](resources/spec_bundle/api/api_contract.md) for exact roles/shapes.
+
+## Checks and CI
+
+```sh
+uv run --locked ruff check backend/src backend/migrations tests scripts
+uv run --locked pytest -q
+npm --prefix frontend run lint
+npm --prefix frontend test
+npm --prefix frontend run build
+```
+
+For the real browser/PostgreSQL integration check, create a disposable database
+whose name ends in `_e2e`, set `SKILLMATCH_E2E_DATABASE_URL` to its psycopg URL,
+and install Chromium. This check writes demo profiles, match runs, and feedback
+in that database; it generates temporary local credentials and stops its servers.
+
+```sh
+node frontend/node_modules/@playwright/test/cli.js install chromium
+uv run --locked python scripts/run_postgres_e2e.py
+```
+
+GitHub Actions runs backend lint/tests, frontend lint/tests/build, and the real
+PostgreSQL browser scenarios. The `CI required` check fails if any job fails or
+is skipped. A repository administrator must require this exact GitHub Actions
+check for `dev` and `main`, require pull requests and up-to-date branches, and
+preserve existing review requirements. The workflow alone does not enforce
+branch protection. Unit 5 evidence must link a successful Actions run for the
+exact submitted commit SHA; local results are not hosted CI evidence.
+
+See [submission readiness](docs/evidence/unit5/submission-readiness.md),
+[technical debt](docs/technical_debt/alpha-register.md), and
+[solo review status](docs/peer_review/solo-review-status.md).

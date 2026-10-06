@@ -29,7 +29,9 @@ def stored_run(client, local_test_account):
             } for rank, score in [(2, 60), (1, 90)]],
         )
         run.generated_at = datetime(2026, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
-        session.add(run); session.commit(); session.refresh(run)
+        session.add(run)
+        session.commit()
+        session.refresh(run)
         run_id = run.match_run_id
     def isolated_db():
         with Session(engine) as session:

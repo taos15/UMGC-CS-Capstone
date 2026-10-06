@@ -1,0 +1,77 @@
+import {test, expect} from '@playwright/test';
+
+test('real React login, PostgreSQL recommendations, immutable run, and supervisor feedback', async ({page, request}) => {
+  await page.goto('/');
+  await page.getByLabel('Username').fill(process.env.SKILLMATCH_E2E_USERNAME);
+  await page.getByLabel('Password', {exact: true}).fill(process.env.SKILLMATCH_E2E_PASSWORD);
+  await page.getByRole('button', {name: 'Sign in', exact: true}).click();
+  await expect(page.getByRole('heading', {name: 'Jobs', exact: true})).toBeVisible();
+  await page.getByRole('button', {name: /Commercial Electrician/}).click();
+  await expect(page.getByText('electrical wiring', {exact: true})).toBeVisible();
+  const received = page.waitForResponse(response => response.url().endsWith('/recommendations') && response.request().method() === 'POST');
+  await page.getByRole('button', {name: 'Request recommendations', exact: true}).click();
+  const response = await received;
+  expect(response.status()).toBe(200);
+  expect(response.headers()['x-request-id']).toBeTruthy();
+  const run = await response.json();
+  expect(run.model_version).toBe('rpce-55-20-15-10-v1');
+  expect(run.recommendations.length).toBeGreaterThan(0);
+  const top = run.recommendations[0];
+  const card = page.getByRole('article', {name: `Employee ${top.employee_id}`, exact: true});
+  await expect(card.getByText('Rank 1', {exact: true})).toBeVisible();
+  await expect(card.getByText(`${top.score}/100`, {exact: true})).toBeVisible();
+  await expect(card.getByText(top.explanation, {exact: true})).toBeVisible();
+  await page.getByRole('combobox', {name: 'Decision', exact: true}).selectOption('SELECTED');
+  await page.getByRole('combobox', {name: 'Selected employee', exact: true}).selectOption(top.employee_id);
+  await page.getByLabel('Comment (optional)').fill('Reviewed during the live integration check.');
+  const saved = page.waitForResponse(response => response.url().endsWith('/feedback') && response.request().method() === 'POST');
+  await page.getByRole('button', {name: 'Record feedback', exact: true}).click();
+  expect((await saved).status()).toBe(201);
+  await expect(page.getByText(/Feedback recorded\./)).toBeVisible();
+  const token = await page.evaluate(() => JSON.parse(sessionStorage.getItem('skillmatch.session')).accessToken);
+  const stored = await request.get(`/api/v1/match-runs/${run.match_run_id}`, {headers: {Authorization: `Bearer ${token}`}});
+  expect(stored.status()).toBe(200);
+  expect((await stored.json()).results).toEqual(run.recommendations);
+});
+
+for (const kind of ['employee', 'job']) {
+  test(`real ${kind} form create, stale-version recovery, update, and permanent deletion`, async ({page, request}) => {
+    await page.goto('/');
+    await page.getByLabel('Username').fill(process.env.SKILLMATCH_E2E_USERNAME);
+    await page.getByLabel('Password', {exact: true}).fill(process.env.SKILLMATCH_E2E_PASSWORD);
+    await page.getByRole('button', {name: 'Sign in', exact: true}).click();
+    await page.getByRole('button', {name: kind === 'employee' ? 'Employee profiles' : 'Job profiles', exact: true}).click();
+    await page.getByRole('button', {name: 'Create profile', exact: true}).click();
+    const name = `Integration ${kind} ${Date.now()}`;
+    await page.getByLabel(kind === 'employee' ? 'Employee number' : 'Job code', {exact: true}).fill(name);
+    await page.getByLabel(kind === 'employee' ? 'Name' : 'Title', {exact: true}).fill(name);
+    await page.getByLabel(kind === 'employee' ? 'Current title' : 'Description', {exact: true}).fill('Integration evidence');
+    await page.getByLabel('Status', {exact: true}).fill(kind === 'employee' ? 'ACTIVE' : 'OPEN');
+    await page.getByLabel(kind === 'employee' ? 'Total years of experience' : 'Minimum years of experience', {exact: true}).fill('2');
+    const path = `/api/v1/${kind === 'employee' ? 'employees' : 'jobs'}`;
+    const received = page.waitForResponse(response => response.url().endsWith(path) && response.request().method() === 'POST');
+    await page.getByRole('button', {name: 'Create profile', exact: true}).click();
+    const created = await received;
+    expect(created.status()).toBe(201);
+    const record = await created.json();
+    await expect(page.getByRole('heading', {name: `Edit ${kind} profile`})).toBeVisible();
+    const token = await page.evaluate(() => JSON.parse(sessionStorage.getItem('skillmatch.session')).accessToken);
+    const {id, ...fields} = record;
+    const changed = await request.put(`${path}/${id}`, {headers: {Authorization: `Bearer ${token}`}, data: fields});
+    expect(changed.status()).toBe(200);
+    await page.getByRole('button', {name: 'Save changes', exact: true}).click();
+    await expect(page.getByRole('alert')).toContainText('Your version is out of date');
+    await expect(page.getByLabel(kind === 'employee' ? 'Name' : 'Title', {exact: true})).toHaveValue(name);
+    await page.getByRole('button', {name: 'Reload latest version'}).click();
+    await page.getByRole('button', {name: 'Discard changes and reload'}).click();
+    await expect(page.getByRole('button', {name: 'Save changes', exact: true})).toBeEnabled();
+    const updated = page.waitForResponse(response => response.url().endsWith(`${path}/${id}`) && response.request().method() === 'PUT');
+    await page.getByRole('button', {name: 'Save changes', exact: true}).click();
+    expect((await updated).status()).toBe(200);
+    await expect(page.getByText('Profile saved.', {exact: true})).toBeVisible();
+    await page.getByRole('button', {name: 'Delete permanently', exact: true}).click();
+    await page.getByRole('button', {name: 'Confirm permanent deletion', exact: true}).click();
+    await expect(page.getByText('Profile permanently deleted.', {exact: true})).toBeVisible();
+    expect((await request.get(`${path}/${id}`, {headers: {Authorization: `Bearer ${token}`}})).status()).toBe(404);
+  });
+}
