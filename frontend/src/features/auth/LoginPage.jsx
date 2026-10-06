@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { apiRequest } from '../../api/client';
+import ProblemAlert, {uiProblem} from '../../components/ProblemAlert';
 import { setSession } from './session';
 
 export default function LoginPage() {
@@ -23,7 +24,7 @@ export default function LoginPage() {
       setSession(token);
     } catch (failure) {
       setPassword('');
-      setError(failure.status === 401 ? 'Invalid username or password.' : 'Unable to sign in. Please try again.');
+      setError(uiProblem(failure, failure.status === 401 ? 'Invalid username or password.' : 'Unable to sign in. Please try again.'));
     } finally {
       submitting.current = false;
       setPending(false);
@@ -42,7 +43,7 @@ export default function LoginPage() {
       <label htmlFor="password">Password</label>
       <input id="password" name="password" type="password" autoComplete="current-password"
         aria-describedby={error ? "login-error" : undefined} required maxLength={1024} value={password} onChange={event => setPassword(event.target.value)} disabled={pending} />
-      {error && <p id="login-error" className="error" role="alert">{error}</p>}
+      {error && <ProblemAlert id="login-error" error={error} fieldTargets={{username: 'username', password: 'password'}} />}
       <button className="primary" type="submit" disabled={pending}>{pending ? 'Signing in…' : 'Sign in'}<span aria-hidden="true">↗</span></button>
     </form>
     <p className="access-note">Need access? Contact your administrator.</p>
