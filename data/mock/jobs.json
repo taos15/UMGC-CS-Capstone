@@ -1,0 +1,110 @@
+[
+  {
+    "id": "00000000-0000-0000-0000-000000000065",
+    "job_code": "MOCK-J001",
+    "title": "Commercial Electrician",
+    "description": "Fictional wiring and diagnostic work with coordination responsibilities.",
+    "status": "OPEN",
+    "minimum_years_experience": 5,
+    "version": 1,
+    "skill_requirements": [
+      {
+        "skill_id": "electrical wiring",
+        "level": "REQUIRED",
+        "minimum_proficiency": 3,
+        "importance": 3
+      },
+      {
+        "skill_id": "blueprint reading",
+        "level": "REQUIRED",
+        "minimum_proficiency": 3,
+        "importance": 2
+      },
+      {
+        "skill_id": "troubleshooting",
+        "level": "REQUIRED",
+        "minimum_proficiency": 3,
+        "importance": 2
+      },
+      {
+        "skill_id": "project coordination",
+        "level": "PREFERRED",
+        "minimum_proficiency": 3,
+        "importance": 2
+      }
+    ],
+    "certification_requirements": [
+      "licensed electrician"
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000066",
+    "job_code": "MOCK-J002",
+    "title": "HVAC Service Technician",
+    "description": "Fictional repair and fault diagnosis with customer communication.",
+    "status": "OPEN",
+    "minimum_years_experience": 4,
+    "version": 1,
+    "skill_requirements": [
+      {
+        "skill_id": "hvac repair",
+        "level": "REQUIRED",
+        "minimum_proficiency": 3,
+        "importance": 3
+      },
+      {
+        "skill_id": "troubleshooting",
+        "level": "REQUIRED",
+        "minimum_proficiency": 3,
+        "importance": 2
+      },
+      {
+        "skill_id": "customer service",
+        "level": "PREFERRED",
+        "minimum_proficiency": 3,
+        "importance": 2
+      }
+    ],
+    "certification_requirements": [
+      "epa 608"
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000067",
+    "job_code": "MOCK-J003",
+    "title": "Facilities Maintenance Technician",
+    "description": "Fictional plumbing, carpentry, safety, and preventative maintenance work.",
+    "status": "OPEN",
+    "minimum_years_experience": 4,
+    "version": 1,
+    "skill_requirements": [
+      {
+        "skill_id": "plumbing",
+        "level": "REQUIRED",
+        "minimum_proficiency": 3,
+        "importance": 3
+      },
+      {
+        "skill_id": "carpentry",
+        "level": "REQUIRED",
+        "minimum_proficiency": 3,
+        "importance": 2
+      },
+      {
+        "skill_id": "safety procedures",
+        "level": "REQUIRED",
+        "minimum_proficiency": 3,
+        "importance": 2
+      },
+      {
+        "skill_id": "preventive maintenance",
+        "level": "PREFERRED",
+        "minimum_proficiency": 3,
+        "importance": 2
+      }
+    ],
+    "certification_requirements": [
+      "osha 10"
+    ]
+  }
+]
