@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createProfile, deleteProfile, readProfile, updateProfile } from '../../api/profiles';
 import { draftFromRecord, newDraft, payloadFromDraft, schema } from './fields';
+import ProblemAlert, {uiProblem} from '../../components/ProblemAlert';
 import EvidenceFields from './EvidenceFields';
 
 export default function ProfileEditor({kind, recordId, onSaved, onCancel, onDeleted}) {
@@ -67,9 +68,9 @@ export default function ProfileEditor({kind, recordId, onSaved, onCancel, onDele
   const readonly = recordId && version === null;
   return <section className="editor"><h2>{recordId ? 'Edit' : 'Create'} {kind === 'employees' ? 'employee' : 'job'} profile</h2>
     {loading && <p role="status">Loading profile…</p>}
-    {error && <div className="error" role="alert"><p>{error.message}</p>{error.requestId && <small>Request ID: {error.requestId}</small>}{error.fields?.length > 0 && <ul>{error.fields.map((field, index) => <li key={index}>Check {field}.</li>)}</ul>}
+    {error && <ProblemAlert error={error}>
       {conflict && <><p>Your unsaved changes are still here. Review or copy them before reloading.</p><button type="button" className="secondary" onClick={() => setConfirmReload(true)}>Reload latest version</button></>}
-    </div>}
+    </ProblemAlert>}
     {confirmReload && <div className="confirmation" role="alertdialog" aria-labelledby="reload-title"><h3 id="reload-title">Reloading will replace your unsaved changes.</h3><button className="secondary" onClick={() => setConfirmReload(false)}>Keep my changes</button><button className="secondary" onClick={() => {setConfirmReload(false); load();}}>Discard changes and reload</button></div>}
     {confirmDelete && <div className="confirmation" role="alertdialog" aria-labelledby="delete-title"><h3 id="delete-title">Permanently delete this profile?</h3><p>{draft?.name || draft?.title} will be permanently removed. This cannot be undone.</p><button className="secondary" onClick={() => setConfirmDelete(false)}>Cancel deletion</button><button className="danger" onClick={remove}>Confirm permanent deletion</button></div>}
     {saved && <p className="success" role="status">Profile saved.</p>}
@@ -85,5 +86,5 @@ function safeError(error) {
   else if (error.status === 404) message = 'This profile is no longer available.';
   else if (error.status === 422) message = 'Some profile fields are invalid. Check the fields below.';
   else if (error.status === 501) message = 'This operation is not available yet. Your changes have not been saved.';
-  return {message, requestId: error.requestId, fields: error.fieldErrors?.map(item => item.field).filter(field => typeof field === 'string')};
+  return uiProblem(error, message);
 }
