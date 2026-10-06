@@ -59,3 +59,32 @@ test('server text is displayed as text, never executed as markup', () => {
   expect(screen.getByText('<script>malicious()</script>')).toBeVisible();
   expect(document.querySelector('script')).toBeNull();
 });
+
+for (const [field, value] of [
+  ['employee_id', ''], ['rank', 0], ['rank', 1.5],
+  ['score', -1], ['score', 101], ['score', '83.42'], ['score', NaN],
+  ['eligible', 'true'], ['explanation', null],
+  ['component_scores', []], ['component_scores', {experience: Infinity}],
+  ['matched_skills', null], ['missing_skills', [42]],
+  ['matched_certifications', 'license'], ['missing_certifications', [{}]],
+  ['ineligible_reasons', undefined],
+]) {
+  test(`invalid ${field} rejects the entire evidence response`, () => {
+    render(<RecommendationResults result={result([candidate, {...candidate, employee_id: 'employee-2', [field]: value}])} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Recommendation evidence is unavailable');
+    expect(screen.queryByRole('article')).not.toBeInTheDocument();
+  });
+}
+
+for (const score of [0, 100]) {
+  test(`score boundary ${score} renders all four server components`, () => {
+    render(<RecommendationResults result={result([{...candidate, score}])} />);
+    expect(screen.getByLabelText(`Score ${score} out of 100`)).toBeVisible();
+    for (const name of ['Required skills', 'Preferred skills', 'Required certifications', 'Experience']) {
+      expect(screen.getByText(name)).toBeVisible();
+    }
+    expect(screen.getByText('0.5/1')).toBeVisible();
+    expect(screen.getByText('1/1')).toBeVisible();
+    expect(screen.getByText('0.9/1')).toBeVisible();
+  });
+}
