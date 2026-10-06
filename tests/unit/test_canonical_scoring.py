@@ -179,3 +179,24 @@ def test_duplicate_skill_ids_rejected():
 def test_job_without_usable_criteria_rejected():
     with pytest.raises(ValidationError, match="usable scoring criterion"):
         JobScoringInput(skill_requirements=(), required_certification_codes=(), minimum_years_experience=0)
+
+
+@pytest.mark.parametrize('component,expected_score', [
+    ('required_skills', 55), ('preferred_skills', 20),
+    ('required_certifications', 15), ('experience', 10),
+])
+def test_each_component_contributes_its_contract_weight_independently(component, expected_score):
+    job = JobScoringInput(
+        skill_requirements=(requirement('r'), requirement('p', 'PREFERRED')),
+        required_certification_codes={'cert'}, minimum_years_experience=2,
+    )
+    skill_id = {'required_skills': 'r', 'preferred_skills': 'p'}.get(component)
+    employee = EmployeeScoringInput(
+        skills=(SkillProficiency(skill_id=skill_id, proficiency=4),) if skill_id else (),
+        valid_certification_codes={'cert'} if component == 'required_certifications' else {'unrelated'},
+        total_years_experience=2 if component == 'experience' else 0,
+    )
+    result = score_candidate(employee, job)
+    assert result.score == pytest.approx(expected_score)
+    for name in ('required_skills', 'preferred_skills', 'required_certifications', 'experience'):
+        assert getattr(result, name) == (1 if name == component else 0)

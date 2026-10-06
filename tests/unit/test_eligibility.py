@@ -99,3 +99,35 @@ def test_fixed_snapshot_controls_validity_and_inputs_are_immutable():
         employee.status = 'INACTIVE'
     with pytest.raises(ValidationError):
         employee.certifications[0].code = 'changed'
+
+
+def test_certification_issued_on_snapshot_is_valid():
+    result = evaluate_eligibility(
+        EmployeeEligibilityInput(status='ACTIVE', certifications=(credential(issued_on=SNAPSHOT),)),
+        job(), as_of=SNAPSHOT,
+    )
+    assert result.eligible
+    assert result.matched_certifications == ('license',)
+
+
+def test_future_renewal_does_not_rescue_expired_credential():
+    employee = EmployeeEligibilityInput(status='ACTIVE', certifications=(
+        credential(expires_on=date(2026, 10, 3)),
+        credential(issued_on=date(2026, 10, 5)),
+    ))
+    result = evaluate_eligibility(employee, job(), as_of=SNAPSHOT)
+    assert not result.eligible
+    assert result.valid_certification_codes == frozenset()
+    assert result.missing_certifications == ('license',)
+    assert result.ineligible_reasons == ('MISSING_MANDATORY_CERTIFICATION:license',)
+
+
+def test_every_mandatory_certification_must_be_valid():
+    employee = EmployeeEligibilityInput(status='ACTIVE', certifications=(
+        credential('a'), credential('z', expires_on=date(2026, 10, 3)), credential('unrelated'),
+    ))
+    result = evaluate_eligibility(employee, job(frozenset({'a', 'z'})), as_of=SNAPSHOT)
+    assert not result.eligible
+    assert result.matched_certifications == ('a',)
+    assert result.missing_certifications == ('z',)
+    assert result.ineligible_reasons == ('MISSING_MANDATORY_CERTIFICATION:z',)
