@@ -112,3 +112,77 @@ def test_snapshot_accepts_canonical_options() -> None:
             snapshot_hash='stored-hash', options=options, results=[],
         )
         assert build_match_run_snapshot(session, created).options.model_dump() == options
+
+
+def _stored_candidate(rank=1):
+    return {
+        'rank': rank, 'employee_id': f'employee-{rank}', 'score': 62.5, 'eligible': False,
+        'component_scores': {'required_skills': 0.5, 'preferred_skills': 1.0,
+                             'required_certifications': 0.0, 'experience': 1.0},
+        'matched_skills': ['wiring'], 'missing_skills': ['blueprints'],
+        'matched_certifications': [], 'missing_certifications': ['license'],
+        'ineligible_reasons': ['MISSING_MANDATORY_CERTIFICATION:license'],
+        'explanation': 'Missing mandatory license; supervisor review required.',
+    }
+
+
+def _persist_run(session, results):
+    return create_match_run(
+        session, job_id='job', requested_by='supervisor',
+        model_version='rpce-55-20-15-10-v1', snapshot_hash='fixed-snapshot',
+        options={'max_results': 5, 'minimum_score': 0, 'include_ineligible': True},
+        results=results,
+    )
+
+
+def test_snapshot_survives_database_reopen_and_returned_dto_mutation(tmp_path):
+    from skillmatch.features.recommendations.repository import build_match_run_snapshot
+
+    database_url = f"sqlite:///{tmp_path / 'match-runs.db'}"
+    engine = create_engine(database_url)
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        created = _persist_run(session, [_stored_candidate(2), _stored_candidate(1)])
+        original = build_match_run_snapshot(session, created).model_dump(mode='json')
+    engine.dispose()
+
+    reopened = create_engine(database_url)
+    try:
+        with Session(reopened) as session:
+            stored = get_match_run(session, created.match_run_id)
+            assert stored is not None
+            snapshot = build_match_run_snapshot(session, stored)
+            assert snapshot.model_dump(mode='json') == original
+            assert [result.model_dump() for result in snapshot.results] == [
+                _stored_candidate(1), _stored_candidate(2),
+            ]
+            assert snapshot.job_id == 'job'
+            assert snapshot.requested_by == 'supervisor'
+            assert snapshot.model_version == 'rpce-55-20-15-10-v1'
+            assert snapshot.snapshot_hash == 'fixed-snapshot'
+            snapshot.results[0].matched_skills.append('changed')
+            snapshot.options.max_results = 1
+            assert build_match_run_snapshot(session, stored).model_dump(mode='json') == original
+    finally:
+        reopened.dispose()
+
+
+def test_failed_candidate_insert_rolls_back_run_and_session_can_be_reused():
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+    from sqlmodel import select
+    from skillmatch.features.recommendations.models import CandidateResult, MatchRun
+
+    with _session() as session:
+        existing = _persist_run(session, [_stored_candidate()])
+        # A real NOT NULL constraint failure occurs after the parent run is flushed.
+        invalid = _stored_candidate(2)
+        invalid['employee_id'] = None
+        with pytest.raises(IntegrityError):
+            _persist_run(session, [_stored_candidate(), invalid])
+        assert [row.match_run_id for row in session.exec(select(MatchRun))] == [existing.match_run_id]
+        assert [row.match_run_id for row in session.exec(select(CandidateResult))] == [existing.match_run_id]
+        recovered = _persist_run(session, [_stored_candidate()])
+        assert recovered.match_run_id != existing.match_run_id
+        assert len(list(session.exec(select(MatchRun)))) == 2
+        assert len(list(session.exec(select(CandidateResult)))) == 2

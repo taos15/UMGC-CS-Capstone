@@ -132,3 +132,13 @@ def test_scored_eligibility_snapshot_round_trip_reproduces_order_and_scores():
     assert [(item.rank, item.employee_id, item.scoring.score, item.scoring.model_version) for item in baseline] == [
         (1, 'a', 100, 'rpce-55-20-15-10-v1'), (2, 'z', 100, 'rpce-55-20-15-10-v1'),
     ]
+
+
+def test_result_limit_cuts_complete_ties_deterministically_after_filtering():
+    candidates = (
+        candidate('z'), candidate('b'), candidate('a'),
+        candidate('ineligible', score=100, eligible=False), candidate('below', score=79),
+    )
+    for permutation in permutations(candidates):
+        result = rank(permutation, minimum_score=80, max_results=2)
+        assert [(item.rank, item.employee_id) for item in result] == [(1, 'a'), (2, 'b')]
