@@ -1,0 +1,9 @@
+.feedback-panel{margin-top:24px;padding-top:16px;border-top:1px solid #d5dfd8}
+.feedback-panel fieldset{border:1px solid #d5dfd8;border-radius:8px;padding:16px;min-width:0}
+.feedback-panel legend{font-size:13px;font-weight:600;color:#53665b;padding:0 6px}
+.feedback-panel label{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.feedback-panel select,.feedback-panel textarea{width:100%;font:inherit;box-sizing:border-box;border:1px solid #c8d1cc;border-radius:7px;background:white;color:#192c38;padding:10px}
+.feedback-panel textarea{min-height:100px;resize:vertical}
+.feedback-panel textarea:focus-visible{outline:3px solid #80b79a;outline-offset:3px}
+.feedback-note{font-size:13px;line-height:1.7;color:#64717a;overflow-wrap:anywhere}
+.feedback-success{font-size:13px;line-height:1.7;color:#215847;background:#dfefdf;padding:12px;border-radius:6px}
