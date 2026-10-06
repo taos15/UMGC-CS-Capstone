@@ -1,7 +1,7 @@
 """initial canonical profiles and audit snapshots
 
 Revision ID: d1dcaf3872f5
-Revises: 
+Revises:
 Create Date: 2026-10-05 21:54:13.501455
 
 """
