@@ -148,3 +148,48 @@ def test_openapi_documents_authentication_contract():
     for status in ('401', '422', '503'):
         assert set(login['responses'][status]['content']) == {'application/problem+json'}
     assert schema['paths']['/api/v1/employees']['get']['security'] == [{'HTTPBearer': []}]
+
+
+@pytest.mark.parametrize('claim,value', [
+    ('role', 'ADMIN'), ('role', 'SUPERUSER'), ('role', None),
+    ('sub', 'not-a-uuid'), ('sub', '00000000-0000-0000-0000-000000000000'),
+])
+def test_signed_token_with_invalid_account_claims_cannot_access_protected_data(configured_auth, monkeypatch, claim, value):
+    client, _, secret, user_id = configured_auth
+    now = int(datetime.now(timezone.utc).timestamp())
+    claims = {'sub': user_id, 'role': 'SUPERVISOR', 'iat': now, 'exp': now + 900}
+    claims[claim] = value
+    token = jwt.encode(claims, secret, algorithm='HS256')
+
+    def protected_read():
+        pytest.fail('Protected employee data was read for an invalid account')
+
+    monkeypatch.setattr('skillmatch.features.employees.router.get_employees', protected_read)
+    response = client.get('/api/v1/employees', headers={
+        'Authorization': 'Bearer ' + token, 'X-Request-ID': 'invalid-account',
+    })
+    assert response.status_code == 401
+    assert response.headers['content-type'] == 'application/problem+json'
+    assert response.headers['www-authenticate'] == 'Bearer'
+    assert response.json()['code'] == 'AUTH_REQUIRED'
+    assert response.json()['field_errors'] == []
+    assert response.json()['request_id'] == response.headers['x-request-id'] == 'invalid-account'
+    assert user_id not in response.text
+
+
+@pytest.mark.parametrize('credentials,field', [
+    ({'username': '', 'password': 'secret'}, 'body.username'),
+    ({'username': 'x' * 129, 'password': 'secret'}, 'body.username'),
+    ({'username': 'supervisor', 'password': ''}, 'body.password'),
+    ({'username': 'supervisor', 'password': 'secret' * 200}, 'body.password'),
+])
+def test_login_schema_boundaries_return_safe_field_errors(configured_auth, credentials, field):
+    client, _, _, _ = configured_auth
+    response = client.post('/api/v1/auth/login', json=credentials)
+    assert response.status_code == 422
+    assert response.headers['content-type'] == 'application/problem+json'
+    body = response.json()
+    assert body['code'] == 'VALIDATION_ERROR'
+    assert field in [error['field'] for error in body['field_errors']]
+    assert body['request_id'] == response.headers['x-request-id']
+    assert 'secret' not in response.text

@@ -121,3 +121,22 @@ def test_repeated_identical_requests_produce_the_same_snapshot_hash(payload, cli
 
     assert first_run.snapshot_hash == second_run.snapshot_hash
     assert first.json()["recommendations"] == second.json()["recommendations"]
+
+
+def test_live_recommendation_and_stored_run_responses_match_shared_schemas(client):
+    from skillmatch.features.matching.schemas import CandidateResult
+    from skillmatch.features.recommendations.schemas import MatchRun
+
+    response = client.post('/api/v1/jobs/job-electrician/recommendations', json={})
+    assert response.status_code == 200
+    body = response.json()
+    assert body['recommendations']
+    candidates = [CandidateResult.model_validate(item) for item in body['recommendations']]
+    assert [item.model_dump(mode='json') for item in candidates] == body['recommendations']
+    assert all(set(item) == set(CandidateResult.model_fields) for item in body['recommendations'])
+    stored_response = client.get(f"/api/v1/match-runs/{body['match_run_id']}")
+    assert stored_response.status_code == 200
+    stored = MatchRun.model_validate(stored_response.json())
+    assert stored.results == candidates
+    assert stored.model_version == body['model_version']
+    assert stored.match_run_id == body['match_run_id']
