@@ -124,3 +124,6 @@ for local frontend coverage and see the evidence document for backend/benchmark 
 
 See the [user manual](docs/user/manual.md) for recommendation, feedback, profile,
 and error-recovery workflows.
+
+Unit 8 presentation preparation: [stakeholder video script](docs/portfolio/stakeholder-video-script.md)
+and [recording checklist](docs/portfolio/recording-checklist.md).

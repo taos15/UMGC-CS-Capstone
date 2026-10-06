@@ -24,6 +24,10 @@ Unit 8 measurements. The final evidence must identify its exact commit/environme
 
 ## Part 2: stakeholder video
 
+A [12-minute narration and demo script](../../portfolio/stakeholder-video-script.md)
+and [recording checklist](../../portfolio/recording-checklist.md) are prepared.
+The actual video still needs recording and duration verification.
+
 Deliver MP4 or a hosted video link, lasting 10–15 minutes. A useful target is 12 minutes:
 
 | Time | Content / demonstration |
