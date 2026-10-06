@@ -6,7 +6,7 @@ The backend is a single installed package at `backend/src/skillmatch/`.
 
 ## Boundaries
 
-- Employees/jobs own public schemas, HTTP routers, and in-memory repositories.
+- Employees/jobs own public schemas, HTTP routers, and database-backed repositories. Canonical profile APIs use private adapters for matching; see the Alpha debt register.
   Their seed modules preserve the original runtime data and ordering.
 - Recommendations own HTTP request/response schemas and candidate orchestration.
   The service reads the employee repository and creates frozen matching inputs.

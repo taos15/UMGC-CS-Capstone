@@ -71,11 +71,12 @@ def _eligibility_input(employee: Employee) -> EmployeeEligibilityInput:
     )
 
 
-def _snapshot_hash(job_id: str, employee_ids: list[str], options: dict) -> str:
-    payload = json.dumps(
-        {"job_id": job_id, "employee_ids": sorted(employee_ids), "options": options},
-        sort_keys=True,
-    )
+def _snapshot_hash(job: Job, employees: list[Employee], options: dict, as_of: date) -> str:
+    payload = json.dumps({
+        'job': job.model_dump(mode='json'),
+        'employees': [employee.model_dump(mode='json') for employee in sorted(employees, key=lambda item: item.id)],
+        'options': options, 'as_of': as_of.isoformat(), 'model_version': MODEL_VERSION,
+    }, sort_keys=True, separators=(',', ':'))
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
@@ -161,7 +162,7 @@ def generate_recommendations(
         "includeIneligible": include_ineligible,
     }
     snapshot_hash = _snapshot_hash(
-        job.id, [employee.id for employee in active_employees], options
+        job, active_employees, options, as_of
     )
 
     try:

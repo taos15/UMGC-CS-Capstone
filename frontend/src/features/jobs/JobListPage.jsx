@@ -47,7 +47,10 @@ export default function JobListPage({ onLogout }) {
     if (!selected) return;
     const controller = new AbortController();
     getJob(selected.id, controller.signal).then(data => {
-      if (!controller.signal.aborted) setDetail({ ...selected, ...data });
+      if (!controller.signal.aborted) setDetail({ ...selected, ...data,
+        required_skills: data.skill_requirements?.filter(item => item.level === 'REQUIRED').map(item => item.skill_id) ?? data.required_skills,
+        required_certifications: data.certification_requirements ?? data.required_certifications,
+      });
     }).catch(error => {
       if (!controller.signal.aborted) setDetailError(uiProblem(error, failureMessage(error, 'view this job')));
     });

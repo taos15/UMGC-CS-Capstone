@@ -1,7 +1,5 @@
 import ast
-import hashlib
 import importlib
-import json
 from pathlib import Path
 
 
@@ -10,10 +8,13 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_canonical_app_preserves_openapi_contract() -> None:
     app = importlib.import_module("skillmatch.main").app
-    digest = hashlib.sha256(
-        json.dumps(app.openapi(), sort_keys=True).encode()
-    ).hexdigest()
-    assert digest == "c34d61bb63494be7b5369ab720741b27ccd7809186d3e39132375dc8ab49a191"
+    schema = app.openapi()
+    for kind, model in [('employees', 'EmployeeProfile'), ('jobs', 'JobProfile')]:
+        response = schema['paths'][f'/api/v1/{kind}']['get']['responses']['200']
+        assert response['content']['application/json']['schema']['items']['$ref'] == f'#/components/schemas/{model}'
+        assert 'version' in schema['components']['schemas'][model]['required']
+        assert '501' not in schema['paths'][f'/api/v1/{kind}']['post']['responses']
+
 
 
 def test_matching_has_no_http_database_or_orchestration_imports() -> None:

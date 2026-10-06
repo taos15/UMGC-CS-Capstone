@@ -25,12 +25,9 @@ jobs:
         with:
           enable-cache: true
           version: '0.12.23'
-      - name: Install locked Python dependencies
-        run: uv sync --locked
-      - name: Lint backend, scripts, and tests
-        run: uv run --locked ruff check backend/src tests scripts
-      - name: Run backend unit, integration, and contract tests
-        run: uv run --locked pytest -q
+      - run: uv sync --locked
+      - run: uv run --locked ruff check backend/src backend/migrations tests scripts
+      - run: uv run --locked pytest -q
 
   frontend:
     name: Frontend lint tests and build
@@ -51,9 +48,46 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  postgres:
+    name: PostgreSQL browser integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: skillmatch_e2e
+          POSTGRES_USER: skillmatch
+          POSTGRES_PASSWORD: ephemeral-ci-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U skillmatch -d skillmatch_e2e"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      SKILLMATCH_E2E_DATABASE_URL: postgresql+psycopg://skillmatch:ephemeral-ci-only@127.0.0.1:5432/skillmatch_e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: '0.12.23'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: uv sync --locked
+      - run: npm --prefix frontend ci
+      - run: node frontend/node_modules/@playwright/test/cli.js install --with-deps chromium
+      - run: uv run --locked python scripts/run_postgres_e2e.py
+      - name: Check migrated PostgreSQL schema
+        env:
+          DATABASE_URL: ${{ env.SKILLMATCH_E2E_DATABASE_URL }}
+        run: uv run --locked alembic check
+
   required:
     name: CI required
-    needs: [backend, frontend]
+    needs: [backend, frontend, postgres]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -62,6 +96,8 @@ jobs:
         env:
           BACKEND_RESULT: ${{ needs.backend.result }}
           FRONTEND_RESULT: ${{ needs.frontend.result }}
+          POSTGRES_RESULT: ${{ needs.postgres.result }}
         run: |
           test "$BACKEND_RESULT" = success
           test "$FRONTEND_RESULT" = success
+          test "$POSTGRES_RESULT" = success

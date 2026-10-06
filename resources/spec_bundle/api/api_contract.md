@@ -131,3 +131,31 @@ Approved by the user in this implementation session:
 - Success returns HTTP 201 with the saved canonical `Feedback`, including server-authenticated `user_id` and UTC `created_at`. Existing rating/comment types are preserved without inventing a rating scale.
 - Every valid submission appends an audit entry, including repeated submissions; prior entries and stored runs remain unchanged. Feedback does not assign employees, alter live matching, or trigger retraining.
 - Database failure returns `503 DATABASE_UNAVAILABLE`, with failed writes rolled back.
+
+## Approved Alpha profile and taxonomy activation
+
+Approved by the solo contributor in the submission-readiness implementation session:
+
+- Employee/job list and detail responses now use section 6 `EmployeeProfile` and
+  `JobProfile` exactly. Legacy flat read shapes are replaced; private repository
+  adapters supply the existing matching inputs without inventing evidence.
+- POST accepts editable canonical fields (no `id` or `version`); success is 201
+  with a server UUID and version 1. PUT accepts the same fields plus a positive
+  integer `version`; success returns the complete profile with version incremented.
+  Unknown fields are rejected. Status values retain ACTIVE/INACTIVE and OPEN/CLOSED.
+- Duplicate business keys return 409 `EMPLOYEE_EXISTS` / `JOB_EXISTS`. Missing
+  profiles return the canonical employee/job not-found code. PUT and DELETE use
+  atomic ID/version predicates; stale conflicts never overwrite or delete data.
+- List endpoints return arrays, ordered by business key, with `page` >= 1 and
+  `page_size` 1–100 (default 25). No new search/status filter is introduced.
+- GET `/skills` returns an ordered paginated array of skill ID strings. ADMIN
+  POST accepts only `{"skill_id": "..."}` (1–128 characters, nonblank, no surrounding
+  whitespace), returns the ID string with 201, and returns 409 `SKILL_EXISTS` for
+  duplicates. IDs are exact, case-sensitive identities; no implicit synonyms.
+- Employee/job writes reject unknown skill IDs with 422 `VALIDATION_ERROR`.
+  Employee certification expiry cannot precede issuance; skill IDs within a
+  profile/job are unique. OPEN jobs require usable criteria.
+- Profiles and taxonomy are persisted in the configured database. Demo data is
+  loaded explicitly by the validated seed script, never silently at server startup.
+- PostgreSQL schema changes use Alembic. SQLite/direct table creation remains
+  an explicitly documented local/test shortcut.

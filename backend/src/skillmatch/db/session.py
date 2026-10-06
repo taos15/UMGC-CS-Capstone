@@ -27,4 +27,15 @@ def init_db() -> None:
         models as _recommendations_models,
     )
 
-    Base.metadata.create_all(bind=engine)
+    from skillmatch.features.employees import models as _employee_models  # noqa: F401
+    from skillmatch.features.jobs import models as _job_models  # noqa: F401
+
+    from skillmatch.features.skills import models as _skill_models  # noqa: F401
+
+    if engine.dialect.name == 'sqlite':
+        Base.metadata.create_all(bind=engine)
+    else:
+        # PostgreSQL schema creation is an explicit Alembic deployment step.
+        with engine.connect() as connection:
+            from sqlalchemy import text
+            connection.execute(text('SELECT 1'))

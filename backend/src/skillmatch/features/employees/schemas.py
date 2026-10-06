@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class EmployeeSkill(BaseModel):
@@ -42,3 +42,27 @@ class EmployeeProfile(BaseModel):
     version: int
     skills: list[EmployeeSkill]
     certifications: list[EmployeeCertification]
+
+
+class EmployeeCreate(BaseModel):
+    model_config = {'extra': 'forbid'}
+    employee_number: Annotated[str, Field(min_length=1, max_length=128)]
+    name: Annotated[str, Field(min_length=1, max_length=200)]
+    current_title: str
+    status: Literal['ACTIVE', 'INACTIVE']
+    total_years_experience: Annotated[float, Field(ge=0, allow_inf_nan=False)]
+    skills: list[EmployeeSkill]
+    certifications: list[EmployeeCertification]
+
+    @model_validator(mode="after")
+    def validate_evidence(self):
+        if len({item.skill_id for item in self.skills}) != len(self.skills):
+            raise ValueError('Duplicate skill_id')
+        for item in self.certifications:
+            if item.expires_on is not None and item.expires_on < item.issued_on:
+                raise ValueError('Certification expires before issue date')
+        return self
+
+
+class EmployeeUpdate(EmployeeCreate):
+    version: Annotated[int, Field(ge=1, strict=True)]

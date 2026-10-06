@@ -8,20 +8,22 @@ WRITE = ['ADMIN']
 SUPERVISE = ['ADMIN', 'SUPERVISOR']
 OPERATIONS = [
     ('post', '/api/v1/auth/login', [], False),
-    ('get', '/api/v1/skills', READ, True),
-    ('post', '/api/v1/skills', WRITE, True),
+    ('get', '/api/v1/skills', READ, False),
+    ('post', '/api/v1/skills', WRITE, False),
     ('get', '/api/v1/employees', READ, False),
-    ('post', '/api/v1/employees', WRITE, True),
+    ('post', '/api/v1/employees', WRITE, False),
     ('get', '/api/v1/employees/{employee_id}', READ, False),
-    ('put', '/api/v1/employees/{employee_id}', WRITE, True),
-    ('get', '/api/v1/jobs', READ, True),
-    ('post', '/api/v1/jobs', WRITE, True),
+    ('put', '/api/v1/employees/{employee_id}', WRITE, False),
+    ('get', '/api/v1/jobs', READ, False),
+    ('post', '/api/v1/jobs', WRITE, False),
     ('get', '/api/v1/jobs/{job_id}', READ, False),
-    ('put', '/api/v1/jobs/{job_id}', WRITE, True),
+    ('put', '/api/v1/jobs/{job_id}', WRITE, False),
     ('post', '/api/v1/jobs/{job_id}/recommendations', SUPERVISE, False),
     ('get', '/api/v1/match-runs/{match_run_id}', READ, False),
     ('post', '/api/v1/match-runs/{match_run_id}/feedback', SUPERVISE, False),
     ('get', '/api/v1/health', None, False),
+    ('delete', '/api/v1/employees/{employee_id}', WRITE, False),
+    ('delete', '/api/v1/jobs/{job_id}', WRITE, False),
 ]
 
 
@@ -38,12 +40,10 @@ def test_endpoint_role_annotations(method, path, roles, is_stub):
         assert '501' in operation['responses']
 
 
-@pytest.mark.parametrize('method,path,roles,is_stub', [item for item in OPERATIONS if item[3]])
-def test_stubs_explicitly_report_unimplemented(method, path, roles, is_stub, client):
-    path = path.replace('{employee_id}', 'employee').replace('{job_id}', 'job').replace('{match_run_id}', 'run')
-    response = client.request(method, path)
-    assert response.status_code == 501
-    assert response.json()['detail'] == 'Not implemented'
+@pytest.mark.parametrize('method,path,roles,is_stub', OPERATIONS)
+def test_alpha_operations_are_implemented(method, path, roles, is_stub):
+    assert not is_stub
+    assert '501' not in app.openapi()['paths'][path][method]['responses']
 
 
 def test_versioned_health():

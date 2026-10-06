@@ -37,4 +37,4 @@ uv run --locked python scripts/preview_mock_dataset.py > data/mock/score_preview
 
 The optional `--as-of YYYY-MM-DD` evaluates credential validity on a different explicit date. Tests compare the checked-in preview against a fresh engine run at the fixed date, preventing silently stale score documentation.
 
-This fixture uses established JSON profile contracts. It does not introduce a CSV import schema or replace the transitional in-memory runtime seeds / legacy `data/sample` examples. Loading it into runtime persistence belongs to the validated import work.
+This fixture uses established JSON profile contracts. After configuring the database and running Alembic migrations, `uv run --locked python scripts/seed_data.py` validates and persists it without overwriting existing profiles. It introduces no CSV import schema. Legacy seed modules remain test compatibility fixtures rather than runtime repositories.

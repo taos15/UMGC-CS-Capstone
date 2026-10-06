@@ -9,17 +9,19 @@ from skillmatch.main import app
 ROLES = ('ADMIN', 'SUPERVISOR', 'VIEWER')
 # Independent expectations from spec section 5, including stub success statuses.
 MATRIX = [
-    ('GET', '/api/v1/skills', ROLES, 501),
-    ('POST', '/api/v1/skills', ('ADMIN',), 501),
+    ('GET', '/api/v1/skills', ROLES, 200),
+    ('POST', '/api/v1/skills', ('ADMIN',), 422),
     ('GET', '/api/v1/employees', ROLES, 200),
-    ('POST', '/api/v1/employees', ('ADMIN',), 501),
+    ('POST', '/api/v1/employees', ('ADMIN',), 422),
     ('GET', '/api/v1/employees/emp-alex', ROLES, 200),
-    ('PUT', '/api/v1/employees/emp-alex', ('ADMIN',), 501),
-    ('GET', '/api/v1/jobs', ROLES, 501),
-    ('POST', '/api/v1/jobs', ('ADMIN',), 501),
+    ('PUT', '/api/v1/employees/emp-alex', ('ADMIN',), 422),
+    ('GET', '/api/v1/jobs', ROLES, 200),
+    ('POST', '/api/v1/jobs', ('ADMIN',), 422),
     ('GET', '/api/v1/jobs/job-electrician', ROLES, 200),
-    ('PUT', '/api/v1/jobs/job-electrician', ('ADMIN',), 501),
+    ('PUT', '/api/v1/jobs/job-electrician', ('ADMIN',), 422),
     ('POST', '/api/v1/jobs/job-electrician/recommendations', ('ADMIN', 'SUPERVISOR'), 200),
+    ('DELETE', '/api/v1/employees/emp-alex', ('ADMIN',), 422),
+    ('DELETE', '/api/v1/jobs/job-electrician', ('ADMIN',), 422),
     ('GET', '/api/v1/match-runs/run', ROLES, 404),
     ('POST', '/api/v1/match-runs/run/feedback', ('ADMIN', 'SUPERVISOR'), 404),
 ]
