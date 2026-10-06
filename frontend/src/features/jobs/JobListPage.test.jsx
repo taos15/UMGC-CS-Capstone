@@ -127,7 +127,7 @@ test('updated non-OPEN detail prevents recommendation requests', async () => {
 
 test('feedback targets the returned run and a new recommendation clears the previous draft', async () => {
   let runNumber = 0;
-  fetch.mockImplementation(async (path, options) => {
+  fetch.mockImplementation(async (path, _options) => {
     if (path.endsWith('/feedback')) return reply({decision: 'SELECTED'}, 201);
     if (path.endsWith('/recommendations')) return reply({
       match_run_id: `stored-run-${++runNumber}`, model_version: 'rules-v1', recommendations: [{
