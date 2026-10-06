@@ -1,0 +1,531 @@
+[
+  {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "employee_number": "MOCK-E001",
+    "name": "Alex Morgan",
+    "current_title": "Electrician",
+    "status": "ACTIVE",
+    "total_years_experience": 8,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "electrical wiring",
+        "proficiency": 5,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "blueprint reading",
+        "proficiency": 4,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "troubleshooting",
+        "proficiency": 5,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "project coordination",
+        "proficiency": 4,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "safety procedures",
+        "proficiency": 4,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "preventive maintenance",
+        "proficiency": 3,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "licensed electrician",
+        "name": "Licensed Electrician",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      },
+      {
+        "code": "osha 10",
+        "name": "OSHA 10",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000002",
+    "employee_number": "MOCK-E002",
+    "name": "Jordan Lee",
+    "current_title": "Electrical Technician",
+    "status": "ACTIVE",
+    "total_years_experience": 3,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "electrical wiring",
+        "proficiency": 2,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "blueprint reading",
+        "proficiency": 2,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "troubleshooting",
+        "proficiency": 3,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "project coordination",
+        "proficiency": 2,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "equipment inspection",
+        "proficiency": 2,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "licensed electrician",
+        "name": "Licensed Electrician",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000003",
+    "employee_number": "MOCK-E003",
+    "name": "Casey Park",
+    "current_title": "Apprentice Technician",
+    "status": "ACTIVE",
+    "total_years_experience": 0.5,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "electrical wiring",
+        "proficiency": 1,
+        "years_experience": 0.375,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "safety procedures",
+        "proficiency": 1,
+        "years_experience": 0.375,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "licensed electrician",
+        "name": "Licensed Electrician",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      },
+      {
+        "code": "epa 608",
+        "name": "EPA 608",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      },
+      {
+        "code": "osha 10",
+        "name": "OSHA 10",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000004",
+    "employee_number": "MOCK-E004",
+    "name": "Sam Rivera",
+    "current_title": "HVAC Technician",
+    "status": "ACTIVE",
+    "total_years_experience": 8,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "hvac repair",
+        "proficiency": 5,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "troubleshooting",
+        "proficiency": 5,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "customer service",
+        "proficiency": 4,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "preventive maintenance",
+        "proficiency": 4,
+        "years_experience": 6.0,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "epa 608",
+        "name": "EPA 608",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000005",
+    "employee_number": "MOCK-E005",
+    "name": "Taylor Brooks",
+    "current_title": "Service Technician",
+    "status": "ACTIVE",
+    "total_years_experience": 3,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "hvac repair",
+        "proficiency": 2,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "troubleshooting",
+        "proficiency": 3,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "customer service",
+        "proficiency": 2,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "inventory management",
+        "proficiency": 2,
+        "years_experience": 2.25,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "epa 608",
+        "name": "EPA 608",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000006",
+    "employee_number": "MOCK-E006",
+    "name": "Morgan Ellis",
+    "current_title": "Junior Service Technician",
+    "status": "ACTIVE",
+    "total_years_experience": 1,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "hvac repair",
+        "proficiency": 1,
+        "years_experience": 0.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "customer service",
+        "proficiency": 1,
+        "years_experience": 0.75,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "epa 608",
+        "name": "EPA 608",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000007",
+    "employee_number": "MOCK-E007",
+    "name": "Riley Chen",
+    "current_title": "Facilities Technician",
+    "status": "ACTIVE",
+    "total_years_experience": 9,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "plumbing",
+        "proficiency": 5,
+        "years_experience": 6.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "carpentry",
+        "proficiency": 4,
+        "years_experience": 6.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "safety procedures",
+        "proficiency": 5,
+        "years_experience": 6.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "preventive maintenance",
+        "proficiency": 5,
+        "years_experience": 6.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "equipment inspection",
+        "proficiency": 4,
+        "years_experience": 6.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "inventory management",
+        "proficiency": 4,
+        "years_experience": 6.75,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "osha 10",
+        "name": "OSHA 10",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000008",
+    "employee_number": "MOCK-E008",
+    "name": "Jamie Patel",
+    "current_title": "Maintenance Assistant",
+    "status": "ACTIVE",
+    "total_years_experience": 2,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "plumbing",
+        "proficiency": 2,
+        "years_experience": 1.5,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "carpentry",
+        "proficiency": 2,
+        "years_experience": 1.5,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "safety procedures",
+        "proficiency": 3,
+        "years_experience": 1.5,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "equipment inspection",
+        "proficiency": 2,
+        "years_experience": 1.5,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "osha 10",
+        "name": "OSHA 10",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000009",
+    "employee_number": "MOCK-E009",
+    "name": "Quinn Davis",
+    "current_title": "Facilities Technician",
+    "status": "ACTIVE",
+    "total_years_experience": 5,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "plumbing",
+        "proficiency": 4,
+        "years_experience": 3.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "carpentry",
+        "proficiency": 4,
+        "years_experience": 3.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "safety procedures",
+        "proficiency": 4,
+        "years_experience": 3.75,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "preventive maintenance",
+        "proficiency": 3,
+        "years_experience": 3.75,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "osha 10",
+        "name": "OSHA 10",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2025-12-31"
+      }
+    ]
+  },
+  {
+    "id": "00000000-0000-0000-0000-00000000000a",
+    "employee_number": "MOCK-E010",
+    "name": "Avery Stone",
+    "current_title": "Senior Multi-trade Technician",
+    "status": "INACTIVE",
+    "total_years_experience": 12,
+    "version": 1,
+    "skills": [
+      {
+        "skill_id": "electrical wiring",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "blueprint reading",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "troubleshooting",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "project coordination",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "hvac repair",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "customer service",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "plumbing",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "carpentry",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "safety procedures",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "preventive maintenance",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "equipment inspection",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      },
+      {
+        "skill_id": "inventory management",
+        "proficiency": 5,
+        "years_experience": 9.0,
+        "last_used_on": "2026-09-01"
+      }
+    ],
+    "certifications": [
+      {
+        "code": "licensed electrician",
+        "name": "Licensed Electrician",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      },
+      {
+        "code": "epa 608",
+        "name": "EPA 608",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      },
+      {
+        "code": "osha 10",
+        "name": "OSHA 10",
+        "issuer": "Fictional Training Board",
+        "issued_on": "2024-01-01",
+        "expires_on": "2030-12-31"
+      }
+    ]
+  }
+]
