@@ -17,40 +17,55 @@ concurrency:
 jobs:
   backend:
     name: Backend lint and tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           enable-cache: true
           version: '0.12.23'
       - run: uv sync --locked
       - run: uv run --locked ruff check backend/src backend/migrations tests scripts
-      - run: uv run --locked pytest -q
+      - run: uv run --locked pytest -q --cov=skillmatch --cov-branch --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov --cov-report=json:coverage-backend.json
+      - name: Save backend coverage evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: backend-coverage-${{ github.sha }}
+          path: |
+            coverage.xml
+            coverage-backend.json
+            htmlcov/
 
   frontend:
     name: Frontend lint tests and build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: '24'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
-      - run: npm test
+      - run: npm run test:coverage
+      - name: Save frontend coverage evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: frontend-coverage-${{ github.sha }}
+          path: frontend/coverage/
       - run: npm run build
 
   postgres:
     name: PostgreSQL browser integration
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
       postgres:
@@ -66,12 +81,12 @@ jobs:
     env:
       SKILLMATCH_E2E_DATABASE_URL: postgresql+psycopg://skillmatch:ephemeral-ci-only@127.0.0.1:5432/skillmatch_e2e
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           enable-cache: true
           version: '0.12.23'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: '24'
           cache: npm
@@ -89,7 +104,7 @@ jobs:
     name: CI required
     needs: [backend, frontend, postgres]
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
       - name: Require every check to succeed

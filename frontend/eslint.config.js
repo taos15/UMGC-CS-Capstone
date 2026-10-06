@@ -3,7 +3,7 @@ import globals from 'globals';
 import react from 'eslint-plugin-react';
 
 export default [
-  {ignores: ['dist/**', 'node_modules/**', 'test-results/**', 'playwright-report/**']},
+  {ignores: ['dist/**', 'node_modules/**', 'test-results/**', 'playwright-report/**', 'coverage/**']},
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {ecmaVersion: 'latest', sourceType: 'module',

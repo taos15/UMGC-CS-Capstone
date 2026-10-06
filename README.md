@@ -116,3 +116,11 @@ exact submitted commit SHA; local results are not hosted CI evidence.
 See [submission readiness](docs/evidence/unit5/submission-readiness.md),
 [technical debt](docs/technical_debt/alpha-register.md), and
 [solo review status](docs/peer_review/solo-review-status.md).
+
+Unit 8: [repository evidence and measurements](docs/evidence/unit8/repository-evidence.md)
+and [portfolio checklist](docs/evidence/unit8/portfolio-checklist.md). CI uploads
+backend and frontend coverage reports; run `npm --prefix frontend run test:coverage`
+for local frontend coverage and see the evidence document for backend/benchmark commands.
+
+See the [user manual](docs/user/manual.md) for recommendation, feedback, profile,
+and error-recovery workflows.
