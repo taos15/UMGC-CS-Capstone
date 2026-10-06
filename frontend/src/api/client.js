@@ -7,7 +7,7 @@ export class ApiError extends Error {
     this.status = status;
     this.code = typeof problem.code === 'string' ? problem.code : 'HTTP_ERROR';
     this.requestId = [requestId, problem.request_id].find(value => typeof value === 'string' && /^[A-Za-z0-9._-]{1,128}$/.test(value));
-    this.fieldErrors = status === 422 && Array.isArray(problem.field_errors) ? problem.field_errors.filter(item => item && typeof item.field === 'string' && /^[A-Za-z0-9_.\[\]-]{1,120}$/.test(item.field)).map(item => ({field: item.field})) : [];
+    this.fieldErrors = status === 422 && Array.isArray(problem.field_errors) ? problem.field_errors.filter(item => item && typeof item.field === 'string' && /^[A-Za-z0-9_.[\]-]{1,120}$/.test(item.field)).map(item => ({field: item.field})) : [];
   }
 }
 export async function apiRequest(path, {method = 'GET', body, auth = true, signal} = {}) {
