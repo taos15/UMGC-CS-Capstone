@@ -132,6 +132,7 @@ test('feedback targets the returned run and a new recommendation clears the prev
     if (path.endsWith('/recommendations')) return reply({
       match_run_id: `stored-run-${++runNumber}`, model_version: 'rules-v1', recommendations: [{
         rank: 1, employee_id: 'eligible-employee', eligible: true, score: 90, explanation: 'Server explanation.',
+        component_scores: {}, matched_skills: [], missing_skills: [], matched_certifications: [], missing_certifications: [], ineligible_reasons: [],
       }],
     });
     return reply(path === '/api/v1/jobs' ? jobs : jobs[0]);
@@ -155,3 +156,20 @@ test('feedback targets the returned run and a new recommendation clears the prev
   await screen.findByText(/Feedback recorded/);
   expect(fetch.mock.calls.filter(([path]) => path.endsWith('/feedback'))[1][0]).toBe('/api/v1/match-runs/stored-run-2/feedback');
 });
+
+for (const [status, code, expected] of [[422, 'VALIDATION_ERROR', 'Check Maximum results.'], [503, 'MATCH_ENGINE_UNAVAILABLE', 'Matching is temporarily unavailable'], [409, 'JOB_NOT_OPEN', 'no longer OPEN']]) {
+  test(`recommendation ${code} appears beside options with support correlation`, async () => {
+    fetch.mockImplementation(async path => {
+      if (path.endsWith('/recommendations')) return reply({code, request_id: 'support-trace', detail: 'private database details', field_errors: [{field: 'body.top_k', message: 'private context'}]}, status);
+      return reply(path === '/api/v1/jobs' ? jobs : jobs[0]);
+    });
+    render(<JobListPage onLogout={vi.fn()} />);
+    await userEvent.click(await screen.findByRole('button', {name: /Commercial Electrician/}));
+    await userEvent.click(await screen.findByRole('button', {name: 'Request recommendations'}));
+    expect(await screen.findByRole('alert')).toHaveTextContent(expected);
+    expect(screen.getByText('Request ID: support-trace')).toBeVisible();
+    expect(screen.queryByText(/private database/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', {name: 'Request recommendations'})).toBeEnabled();
+    if (status === 422) expect(screen.getByRole('link', {name: 'Check Maximum results.'})).toHaveAttribute('href', '#top-k');
+  });
+}

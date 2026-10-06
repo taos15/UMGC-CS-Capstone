@@ -1,5 +1,6 @@
 import React, {useRef, useState} from 'react';
 import {recordFeedback} from '../../api/feedback';
+import ProblemAlert, {uiProblem} from '../../components/ProblemAlert';
 import './feedback.css';
 
 const decisions = ['SELECTED', 'NOT_SELECTED', 'DEFERRED'];
@@ -32,7 +33,7 @@ export default function FeedbackForm({matchRunId, candidates = []}) {
     submitting.current = true; setPending(true); setError(null);
     const body = {decision, ...(decision === 'SELECTED' ? {selected_employee_id: selectedId} : {}), ...(comment ? {comment} : {})};
     try {await recordFeedback(matchRunId, body); setSaved(true);}
-    catch (failure) {setError({message: failureMessage(failure), requestId: failure.requestId});}
+    catch (failure) {setError(uiProblem(failure, failureMessage(failure)));}
     finally {submitting.current = false; setPending(false);}
   }
 
@@ -51,7 +52,7 @@ export default function FeedbackForm({matchRunId, candidates = []}) {
         </select></label>{!eligible.length && <p>No eligible candidates were returned for selection. You can record NOT_SELECTED or DEFERRED.</p>}</>}
         <label>Comment (optional)<textarea value={comment} onChange={event => change(() => setComment(event.target.value))} /></label>
       </fieldset>
-      {error && <div className="error" role="alert"><p>{error.message}</p>{error.requestId && <small>Request ID: {error.requestId}</small>}</div>}
+      {error && <ProblemAlert error={error} />}
       {saved && <p className="feedback-success" role="status">Feedback recorded. This decision does not assign employees. Changing the form and submitting again adds another audit entry.</p>}
       <button className="primary" disabled={pending || saved || !canSubmit}>{pending ? 'Recording…' : 'Record feedback'}</button>
     </form>
